@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Define the two themes using CSS variables */
+:root {
+  /* Default Theme */
+  --bg-main: #F4F4F2;        
+  --bg-secondary: #EBEBE8;   
+  --text-main: #442D1C;       
+  --text-muted: #84592B;     
+  --primary: #BAB98B;        
+  --secondary: #A54F6B;     
+  --accent: #B7A159;         
+}
+
+[data-theme='dark'] {
+  /* Dark Theme */
+  --bg-main: #442D1C;        
+  --bg-secondary: #5C3D26;  
+  --text-main: #F4F4F2;      
+  --text-muted: #E8D1A7;     
+  --primary: #9D9167;        
+  --secondary: #743014;      
+  --accent: #E8D1A7;         
+}
+
+/* Mapping to Tailwind classes */
+@layer base {
+  body {
+    @apply bg-skin-base text-skin-base transition-colors duration-500 ease-in-out;
+  }
+}
