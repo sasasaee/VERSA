@@ -5,6 +5,9 @@ const storySchema = new mongoose.Schema({
   genre: { type: String, default: 'General' },
   headerImage: { type: String }, 
   
+  isPaused: { type: Boolean, default: false },
+  authorRank: { type: String, enum: ['beginner', 'master'], default: 'beginner' },
+
   segments: [
     {
       content: { type: String, required: true },
@@ -15,6 +18,7 @@ const storySchema = new mongoose.Schema({
 
   // Who started the story? + adds timestamp
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -17,6 +17,11 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  rank: {
+    type: String, 
+    enum: ['beginner', 'master'], 
+    default: 'beginner' 
+  },
   createdAt: {
     type: Date,
     default: Date.now
