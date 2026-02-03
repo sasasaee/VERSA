@@ -1,8 +1,9 @@
 const express = require('express');
-const authRoutes = require('./routes/auth');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const authRoutes = require('./routes/auth');
 const storyRoutes = require('./routes/stories');
+const userRoutes = require('./routes/users');
 require('dotenv').config();
 
 const app = express();
@@ -15,9 +16,11 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected Successfully'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-  //routes
+//routes
 app.use('/api/auth', authRoutes);
 app.use('/api/stories', storyRoutes);
+app.use('/api/users', userRoutes);
+
 app.get('/', (req, res) => {
   res.send('Versa API is running...');
 });

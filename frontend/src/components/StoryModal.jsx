@@ -4,7 +4,6 @@ const StoryModal = ({ storyId, onClose }) => {
   const [story, setStory] = useState(null);
   const [newSegment, setNewSegment] = useState('');
   
-  // Fetch full story details when Modal opens
   useEffect(() => {
     const fetchStory = async () => {
       const token = localStorage.getItem('token');
@@ -52,13 +51,10 @@ const StoryModal = ({ storyId, onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-skin-base w-full max-w-3xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col relative animate-fade-in-up">
         
-        {/* Close Button */}
         <button onClick={onClose} className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/50 text-white rounded-full hover:bg-red-500 transition-colors">✕</button>
 
-        {/* Scrollable Content Area */}
         <div className="overflow-y-auto p-0 flex-1 custom-scrollbar">
             
-            {/* Header Image */}
             <div className="relative h-56">
                 {story.headerImage && <img src={story.headerImage} className="w-full h-full object-cover" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
@@ -67,20 +63,38 @@ const StoryModal = ({ storyId, onClose }) => {
             </div>
 
             <div className="p-8 space-y-6">
-                {/* The Chain of Segments */}
-                {story.segments.map((seg, index) => (
-                    <div key={index} className="bg-skin-card p-4 rounded-xl shadow-sm border border-skin-muted/10">
-                        <p className="text-skin-text font-serif leading-relaxed whitespace-pre-wrap">{seg.content}</p>
-                        <div className="mt-3 flex items-center gap-2 text-xs text-skin-muted font-bold uppercase tracking-wider">
-                           <div className="w-5 h-5 rounded-full bg-skin-primary text-white flex items-center justify-center">
-                              {seg.author?.username?.[0] || 'A'}
-                           </div>
-                           {seg.author?.username}
-                        </div>
+                {story.segments.map((segment, index) => (
+                  <div key={index} className="mb-6 last:mb-0">
+                    <div 
+                      onClick={() => window.location.href = `/profile/${segment.author._id}`}
+                      className="flex items-center gap-3 mb-3 cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-xs text-skin-primary border border-skin-primary/30 overflow-hidden">
+                        {segment.author?.profilePicture ? (
+                          <img 
+                            src={segment.author.profilePicture} 
+                            alt={segment.author.username} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          segment.author?.username?.[0]?.toUpperCase() || "U"
+                        )}
+                      </div>
+                      <div>
+                        <span className="font-bold text-skin-primary text-sm hover:underline">
+                          {segment.author?.username || 'Unknown'}
+                        </span>
+                        <span className="text-xs text-skin-muted ml-2">
+                          {segment.author?.rank && `(${segment.author.rank})`}
+                        </span>
+                      </div>
                     </div>
+                    <p className="text-skin-text leading-relaxed font-serif pl-11">
+                      {segment.content}
+                    </p>
+                  </div>
                 ))}
 
-                {/* The Continuation Input */}
                 <div className="pt-6 border-t border-skin-muted/20">
                     {story.isPaused ? (
                         <p className="text-center text-red-500 font-bold">⛔ Story Locked by Author</p>

@@ -18,9 +18,23 @@ const UserSchema = new mongoose.Schema({
     required: true
   },
   rank: {
-    type: String, 
-    enum: ['beginner', 'master'], 
-    default: 'beginner' 
+    type: String,
+    enum: ['beginner', 'master'],
+    default: 'beginner'
+  },
+  // NEW FIELDS FOR PROFILE
+  profilePicture: {
+    type: String,
+    default: ''
+  },
+  bio: {
+    type: String,
+    default: '',
+    maxlength: 500
+  },
+  contestsParticipated: {
+    type: Number,
+    default: 0
   },
   createdAt: {
     type: Date,
