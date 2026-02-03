@@ -18,13 +18,13 @@ const About = () => {
         <section className="bg-skin-card rounded-2xl p-8 shadow-lg border border-skin-primary/10">
           <h2 className="text-3xl font-bold text-skin-primary mb-4">What is VERSA?</h2>
           <p className="text-skin-text/80 leading-relaxed mb-4">
-            VERSA is a unique collaborative storytelling platform that brings writers together to create 
-            amazing stories. Whether you're a beginner exploring your creative side or a master storyteller, 
+            VERSA is a collaborative storytelling platform that brings writers together to create 
+            stories. Whether you're a beginner exploring your creative side or a master storyteller, 
             VERSA provides the perfect space for you to share your imagination with the world.
           </p>
           <p className="text-skin-text/80 leading-relaxed">
             Our platform allows users to start stories and invite others to continue them, creating 
-            rich, multi-author narratives that evolve organically through community collaboration.
+            multi-author narratives that evolve organically through community collaboration.
           </p>
         </section>
 
@@ -75,7 +75,7 @@ const About = () => {
               </div>
               <h3 className="text-xl font-bold text-skin-primary mb-2">User Profiles</h3>
               <p className="text-skin-text/70 text-sm">
-                Showcase your stories, track contributions, and build your reputation in the community.
+                Showcase your stories, track contributions and build your reputation in the community.
               </p>
             </div>
           </div>
@@ -86,7 +86,7 @@ const About = () => {
           <p className="text-skin-text/80 leading-relaxed text-center max-w-2xl mx-auto">
             We believe that every person has a story to tell and that the best stories are created 
             together. VERSA aims to break down the barriers of solo writing and foster a community 
-            where creativity flows freely, ideas merge seamlessly, and every contributor's voice matters.
+            where creativity flows freely, ideas merge seamlessly and every contributor's voice matters.
           </p>
         </section>
 
@@ -126,12 +126,15 @@ const About = () => {
         </section>
 
         <footer className="text-center text-skin-muted text-sm py-8 border-t border-skin-muted/20">
-          <p>© 2026 VERSA. Built with ❤️ for storytellers everywhere.</p>
+          <p>© 2026 VERSA. For storytellers everywhere.</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              const token = localStorage.getItem('token');
+              navigate(token ? '/' : '/login');
+            }}
             className="text-skin-secondary hover:underline mt-2"
           >
-            Back to Dashboard
+            {localStorage.getItem('token') ? 'Back to Dashboard' : 'Go to Login'}
           </button>
         </footer>
       </div>

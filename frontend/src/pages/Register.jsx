@@ -83,6 +83,14 @@ const Register = () => {
                 Login here
                 </Link>
             </p>
+            <p className="text-center text-skin-muted mt-4">
+            <button
+              onClick={() => navigate('/about')}
+              className="text-skin-primary font-medium hover:underline"
+            >
+              Learn more about VERSA
+            </button>
+          </p>
         </div>
         </form>
       </div>
