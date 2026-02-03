@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const Navbar = ({ activeTab, setActiveTab }) => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const token = localStorage.getItem('token');
 
@@ -17,6 +18,17 @@ const Navbar = ({ activeTab, setActiveTab }) => {
       return null;
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -51,7 +63,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
       <div className="flex items-center justify-between">
         <div 
           onClick={() => navigate('/')}
-          className="text-2xl font-bold text-skin-primary cursor-pointer hover:scale-105 transition-transform"
+          className="text-2xl font-bold bg-gradient-to-r from-skin-primary to-skin-secondary bg-clip-text text-transparent cursor-pointer hover:scale-110 transition-transform duration-300"
         >
           VERSA
         </div>
@@ -62,50 +74,60 @@ const Navbar = ({ activeTab, setActiveTab }) => {
               setActiveTab && setActiveTab('feed');
               navigate('/');
             }}
-            className={`font-medium transition-colors ${
+            className={`font-medium transition-all duration-300 relative ${
               activeTab === 'feed' 
                 ? 'text-skin-primary' 
                 : 'text-skin-muted hover:text-skin-primary'
             }`}
           >
             Feed
+            {activeTab === 'feed' && (
+              <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-skin-primary rounded-full"></span>
+            )}
           </button>
 
           <button
             onClick={() => navigate('/write')}
-            className="font-medium text-skin-muted hover:text-skin-primary transition-colors"
+            className="font-medium text-skin-muted hover:text-skin-primary transition-colors duration-300"
           >
             Write
           </button>
 
           <button
             onClick={() => navigate('/about')}
-            className="font-medium text-skin-muted hover:text-skin-primary transition-colors"
+            className="font-medium text-skin-muted hover:text-skin-primary transition-colors duration-300"
           >
             About
           </button>
 
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="w-10 h-10 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-primary/30 hover:scale-110 transition-transform overflow-hidden"
+              className="relative w-11 h-11 rounded-full bg-gradient-to-br from-skin-primary/30 to-skin-secondary/30 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-primary/40 hover:scale-110 hover:shadow-lg hover:shadow-skin-primary/30 transition-all duration-300 overflow-hidden group"
             >
+              <div className="absolute inset-0 bg-gradient-to-br from-skin-primary/20 to-skin-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
               {currentUser?.profilePicture ? (
                 <img 
                   src={currentUser.profilePicture} 
                   alt={currentUser.username} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover relative z-10"
                 />
               ) : (
-                currentUser?.username?.[0]?.toUpperCase() || 'U'
+                <span className="relative z-10">{currentUser?.username?.[0]?.toUpperCase() || 'U'}</span>
               )}
             </button>
 
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-skin-card rounded-lg shadow-xl border border-skin-primary/10 py-2 z-50">
-                <div className="px-4 py-2 border-b border-skin-muted/20">
-                  <p className="font-bold text-skin-primary text-sm">{currentUser?.username}</p>
-                  <p className="text-xs text-skin-muted">{currentUser?.rank}</p>
+              <div 
+                className="absolute right-0 mt-3 w-56 bg-skin-card rounded-xl shadow-2xl border border-skin-primary/20 py-2 z-50"
+                style={{
+                  animation: 'dropdown-in 0.2s ease-out forwards'
+                }}
+              >
+                <div className="px-4 py-3 border-b border-skin-muted/20 bg-gradient-to-r from-skin-primary/5 to-skin-secondary/5">
+                  <p className="font-bold text-skin-primary text-sm truncate">{currentUser?.username}</p>
+                  <p className="text-xs text-skin-muted capitalize">{currentUser?.rank}</p>
                 </div>
                 
                 <button
@@ -113,9 +135,12 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                     navigate(`/profile/${currentUserId}`);
                     setShowDropdown(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-skin-text hover:bg-skin-primary/10 transition-colors text-sm"
+                  className="w-full text-left px-4 py-3 text-skin-text hover:bg-skin-primary/10 transition-all duration-200 text-sm flex items-center gap-3 group"
                 >
-                  My Profile
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-skin-primary group-hover:scale-110 transition-transform">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  </svg>
+                  <span className="group-hover:translate-x-1 transition-transform duration-200">My Profile</span>
                 </button>
 
                 <button
@@ -123,15 +148,31 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                     handleLogout();
                     setShowDropdown(false);
                   }}
-                  className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-500/10 transition-colors text-sm"
+                  className="w-full text-left px-4 py-3 text-red-500 hover:bg-red-500/10 transition-all duration-200 text-sm flex items-center gap-3 group"
                 >
-                  Logout
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 group-hover:scale-110 transition-transform">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                  </svg>
+                  <span className="group-hover:translate-x-1 transition-transform duration-200">Logout</span>
                 </button>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes dropdown-in {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+      `}</style>
     </nav>
   );
 };
