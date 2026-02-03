@@ -2,6 +2,52 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
+// Add animation styles
+const styles = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 25%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+`;
+
+// Add style tag
+if (typeof document !== 'undefined' && !document.getElementById('profile-animations')) {
+  const styleTag = document.createElement('style');
+  styleTag.id = 'profile-animations';
+  styleTag.innerHTML = styles;
+  document.head.appendChild(styleTag);
+}
+
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
