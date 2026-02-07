@@ -8,10 +8,13 @@ import StoryModal from '../components/StoryModal';
 // --- 1. HELPER: Get current user ID to check if we liked the story ---
 const getUserIdFromToken = (token) => {
   if (!token) return null;
+  // Clean token
+  const cleanToken = token.replace(/^"|"$/g, '');
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const payload = JSON.parse(atob(cleanToken.split('.')[1]));
     return payload.userId;
-  } catch {
+  } catch (e) {
+    console.error("Dashboard Token parse error:", e);
     return null;
   }
 };
@@ -222,11 +225,13 @@ const Dashboard = () => {
                       {/* BOOK UPVOTE BUTTON */}
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // Added: Prevents page jump or parent click
+                          e.stopPropagation();
+                          if (String(story.author?._id) === String(currentUserId)) return;
                           handleLike(story._id);
                         }}
-                        className="flex items-center gap-2 group transition-all focus:outline-none"
-                        title="Like this story"
+                        disabled={String(story.author?._id) === String(currentUserId)}
+                        className={`flex items-center gap-2 group transition-all focus:outline-none ${String(story.author?._id) === String(currentUserId) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        title={String(story.author?._id) === String(currentUserId) ? "You cannot upvote your own story" : "Like this story"}
                       >
                         <div className="relative">
                           {/* The Sparkle/Glow Effect Layer (Only visible when liked) */}

@@ -21,7 +21,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'versa_profiles',
-    allowed_formats: ['jpg', 'png', 'jpeg'],
+    allowedFormats: ['jpg', 'png', 'jpeg'],
   }
 });
 

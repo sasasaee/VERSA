@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "mongoose": "^9.1.5"
+    "mongoose": "^9.1.5",
+    "multer-storage-cloudinary": "^4.0.0"
   }
 }

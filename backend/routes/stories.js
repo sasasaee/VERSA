@@ -3,17 +3,29 @@ const router = express.Router();
 const Story = require('../models/Story');
 const auth = require('../middleware/auth');
 
-// POST: Create a new story
-router.post('/', auth, async (req, res) => {
-  try {
-    const { title, content, genre, headerImage } = req.body;
+const upload = require('../middleware/upload');
 
-    const User = require('../models/User'); // Import User
+// POST: Create a new story
+router.post('/', [auth, upload.single('headerImage')], async (req, res) => {
+  try {
+    if (!req.body || (Object.keys(req.body).length === 0 && !req.file)) {
+      return res.status(400).json({ msg: 'Request body is missing' });
+    }
+
+    const { title, content, genre } = req.body;
+    const headerImage = req.file ? req.file.path : null;
+
+    if (!title || !content) {
+      return res.status(400).json({ msg: 'Please provide both a title and content.' });
+    }
+
+    const User = require('../models/User');
     const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
 
     const newStory = new Story({
       title,
-      genre,
+      genre: genre || 'General',
       headerImage,
       author: req.user.id,
       authorRank: user.rank,
@@ -43,6 +55,30 @@ router.get('/', async (req, res) => {
     res.json(stories);
   } catch (err) {
     console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// NEW: Fetch all stories related to a specific user (Started or Contributed)
+router.get('/user/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    console.log(`Fetching stories related to User ID: ${userId}`);
+
+    const stories = await Story.find({
+      $or: [
+        { author: userId },
+        { 'segments.author': userId }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .populate('author', 'username rank profilePicture')
+      .populate('segments.author', 'username rank profilePicture');
+
+    console.log(`Found ${stories.length} stories for user ${userId}`);
+    res.json(stories);
+  } catch (err) {
+    console.error('Backend user stories error:', err);
     res.status(500).send('Server Error');
   }
 });
@@ -130,6 +166,11 @@ router.put('/like/:id', auth, async (req, res) => {
 
     if (!story) {
       return res.status(404).json({ msg: 'Story not found' });
+    }
+
+    // FEATURE: Prevent self-upvoting
+    if (story.author.toString() === req.user.id) {
+      return res.status(403).json({ msg: 'You cannot upvote your own story' });
     }
 
     // Check if the story has already been liked by this user
