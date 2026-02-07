@@ -10,7 +10,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   };
 
   return (
-    <div className="flex items-center justify-between mb-8 pl-32"> {/* Left padding prevents lamp overlap */}
+    <div className="flex items-center justify-between mb-8 pl-32">
 
       {/* 1. Toggle Switch */}
       <div className="bg-skin-card rounded-full p-1 flex shadow-inner">
@@ -32,9 +32,17 @@ const Navbar = ({ activeTab, setActiveTab }) => {
       <div className="flex items-center gap-4">
         {/* Icon Box */}
         <div className="bg-skin-card rounded-xl p-2 flex gap-4 shadow-sm border border-skin-muted/20">
-          {/* Placeholders for icons - You can replace with SVGs or react-icons */}
           <button className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Notifications">🔔</button>
-          <button className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="About Us">ℹ️</button>
+          
+          {/* FIXED: Added onClick to About icon */}
+          <button 
+            onClick={() => navigate('/about')}
+            className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary cursor-pointer" 
+            title="About Us"
+          >
+            ℹ️
+          </button>
+          
           <button onClick={() => navigate('/profile')} className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Profile">👤</button>
         </div>
 
