@@ -245,7 +245,7 @@ const Dashboard = () => {
                             strokeWidth={1.5}
                             stroke="currentColor"
                             className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isLiked(story.upvotes)
-                              ? "fill-skin-secondary text-skin-secondary scale-110 drop-shadow-[0_0_8px_rgba(var(--color-secondary),0.6)]"
+                              ? "fill-skin-primary text-skin-primary scale-110"
                               : "fill-none text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
                               }`}
                           >
@@ -253,7 +253,7 @@ const Dashboard = () => {
                           </svg>
                         </div>
 
-                        <span className={`font-medium text-sm transition-colors duration-300 ${isLiked(story.upvotes) ? "text-skin-secondary font-bold" : "text-skin-muted"
+                        <span className={`font-medium text-sm transition-colors duration-300 ${isLiked(story.upvotes) ? "text-skin-primary font-bold" : "text-skin-muted"
                           }`}>
                           {story.upvotes?.length || 0}
                         </span>

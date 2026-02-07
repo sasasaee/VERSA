@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Story = require('../models/Story');
 const auth = require('../middleware/auth');
-
+const Notification = require('../models/Notification'); // ADD THIS
 const upload = require('../middleware/upload');
 
 // POST: Create a new story
@@ -31,7 +31,7 @@ router.post('/', [auth, upload.single('headerImage')], async (req, res) => {
       authorRank: user.rank,
       segments: [
         {
-          content: content, // The starting text
+          content: content,
           author: req.user.id
         }
       ]
@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// NEW: Fetch all stories related to a specific user (Started or Contributed)
+// GET: Fetch all stories related to a specific user
 router.get('/user/:id', async (req, res) => {
   try {
     const userId = req.params.id;
@@ -83,26 +83,23 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
+// POST: Add segment to story
 router.post('/segment/:id', auth, async (req, res) => {
   try {
     const story = await Story.findById(req.params.id);
     if (!story) return res.status(404).json({ msg: 'Story not found' });
 
-    // Check if Paused
     if (story.isPaused) {
       return res.status(403).json({ msg: 'Story is paused by the author' });
     }
 
-    // Check Permissions (Master vs Beginner)
-    // We need the current user's rank. 
-    const User = require('../models/User'); // Import User model
+    const User = require('../models/User');
     const currentUser = await User.findById(req.user.id);
 
     if (story.authorRank === 'master' && currentUser.rank === 'beginner') {
       return res.status(403).json({ msg: 'Only Masters can continue this story.' });
     }
 
-    // Add Segment
     const newSegment = {
       content: req.body.content,
       author: req.user.id
@@ -111,7 +108,18 @@ router.post('/segment/:id', auth, async (req, res) => {
     story.segments.push(newSegment);
     await story.save();
 
-    // Return the updated story with populated authors
+    // CREATE NOTIFICATION for story continuation
+    if (story.author.toString() !== req.user.id) {
+      await Notification.create({
+        recipient: story.author,
+        sender: req.user.id,
+        type: 'story_continuation',
+        story: story._id,
+        message: `${currentUser.username} continued your story "${story.title}"`,
+        link: `/story/${story._id}`
+      });
+    }
+
     const updatedStory = await Story.findById(req.params.id)
       .populate('segments.author', 'username profilePicture')
       .populate('author', 'username profilePicture');
@@ -124,12 +132,11 @@ router.post('/segment/:id', auth, async (req, res) => {
   }
 });
 
-// NEW: Toggle Pause (Owner Only)
+// PUT: Toggle Pause
 router.put('/pause/:id', auth, async (req, res) => {
   try {
     const story = await Story.findById(req.params.id);
 
-    // Check ownership
     if (story.author.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'User not authorized' });
     }
@@ -143,12 +150,12 @@ router.put('/pause/:id', auth, async (req, res) => {
   }
 });
 
-//Get Single Story (Full View)
+// GET: Get Single Story
 router.get('/:id', async (req, res) => {
   try {
     const story = await Story.findById(req.params.id)
       .populate('author', 'username rank profilePicture')
-      .populate('segments.author', 'username rank profilePicture'); // Get rank for segment authors too
+      .populate('segments.author', 'username rank profilePicture');
 
     if (!story) return res.status(404).json({ msg: 'Story not found' });
 
@@ -160,6 +167,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// PUT: Like/Unlike story with NOTIFICATION
 router.put('/like/:id', auth, async (req, res) => {
   try {
     const story = await Story.findById(req.params.id);
@@ -168,23 +176,37 @@ router.put('/like/:id', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Story not found' });
     }
 
-    // FEATURE: Prevent self-upvoting
+    // Prevent self-upvoting
     if (story.author.toString() === req.user.id) {
       return res.status(403).json({ msg: 'You cannot upvote your own story' });
     }
 
-    // Check if the story has already been liked by this user
-    if (story.upvotes.filter(like => like.toString() === req.user.id).length > 0) {
-      // Get remove index
+    const alreadyLiked = story.upvotes.filter(like => like.toString() === req.user.id).length > 0;
+
+    if (alreadyLiked) {
+      // Unlike
       const removeIndex = story.upvotes.map(like => like.toString()).indexOf(req.user.id);
       story.upvotes.splice(removeIndex, 1);
     } else {
-      // Add user id to upvotes array
+      // Like
       story.upvotes.unshift(req.user.id);
+
+      // CREATE NOTIFICATION
+      const User = require('../models/User');
+      const liker = await User.findById(req.user.id);
+
+      await Notification.create({
+        recipient: story.author,
+        sender: req.user.id,
+        type: 'like',
+        story: story._id,
+        message: `${liker.username} liked your story "${story.title}"`,
+        link: `/`
+      });
     }
 
     await story.save();
-    res.json(story.upvotes); // Return only the upvotes array
+    res.json(story.upvotes);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

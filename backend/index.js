@@ -1,8 +1,9 @@
 const express = require('express');
-const authRoutes = require('./routes/auth');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const authRoutes = require('./routes/auth');
 const storyRoutes = require('./routes/stories');
+const notificationRoutes = require('./routes/notifications'); // ADD THIS
 require('dotenv').config();
 
 const app = express();
@@ -19,6 +20,8 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/user', require('./routes/user'));
+app.use('/api/notifications', notificationRoutes); // ADD THIS
+
 app.get('/', (req, res) => {
   res.send('Versa API is running...');
 });
