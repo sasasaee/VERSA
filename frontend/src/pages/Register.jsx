@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,7 @@ const Register = () => {
     email: '',
     password: ''
   });
+  const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
 
@@ -29,14 +31,17 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert('Registration Successful! Please Login.');
-        navigate('/login');
+        setToast({ message: '✓ Registration Successful! Redirecting to login...', type: 'success' });
+        
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       } else {
-        alert(data.message || 'Registration Failed');
+        setToast({ message: data.message || 'Registration Failed', type: 'error' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Server Error. Is the backend running?');
+      setToast({ message: 'Server Error. Is the backend running?', type: 'error' });
     }
   };
 
@@ -86,7 +91,6 @@ const Register = () => {
             </p>
           </div>
 
-          {/* ADD THIS - About link */}
           <div className="text-center text-skin-muted mt-4">
             <Link to="/about" className="text-skin-primary font-medium hover:underline">
               Learn more about VERSA
@@ -94,6 +98,15 @@ const Register = () => {
           </div>
         </form>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
     </div>
   );
 };

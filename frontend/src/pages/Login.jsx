@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
 
@@ -29,14 +31,18 @@ const Login = () => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        alert('Login Successful!');
-        navigate('/'); 
+        
+        setToast({ message: '✓ Login Successful!', type: 'success' });
+        
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
       } else {
-        alert(data.message || 'Login Failed');
+        setToast({ message: data.message || 'Login Failed', type: 'error' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Server Error');
+      setToast({ message: 'Server Error', type: 'error' });
     }
   };
 
@@ -87,7 +93,6 @@ const Login = () => {
             </p>
           </div>
 
-          {/* ADD THIS SECTION */}
           <div className="text-center text-skin-muted mt-4">
             <Link to="/about" className="text-skin-primary font-medium hover:underline">
               Learn more about VERSA
@@ -95,6 +100,15 @@ const Login = () => {
           </div>
         </form>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
     </div>
   );
 };
