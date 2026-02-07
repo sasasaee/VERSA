@@ -30,7 +30,7 @@ const Register = () => {
 
       if (response.ok) {
         alert('Registration Successful! Please Login.');
-        navigate('/login'); // Send user to login page
+        navigate('/login');
       } else {
         alert(data.message || 'Registration Failed');
       }
@@ -76,14 +76,22 @@ const Register = () => {
           >
             Register
           </button>
+          
           <div className="mt-6 text-center text-skin-muted">
             <p>
-                Already have an account?{' '}
-                <Link to="/login" className="text-skin-primary font-bold hover:underline">
+              Already have an account?{' '}
+              <Link to="/login" className="text-skin-primary font-bold hover:underline">
                 Login here
-                </Link>
+              </Link>
             </p>
-        </div>
+          </div>
+
+          {/* ADD THIS - About link */}
+          <div className="text-center text-skin-muted mt-4">
+            <Link to="/about" className="text-skin-primary font-medium hover:underline">
+              Learn more about VERSA
+            </Link>
+          </div>
         </form>
       </div>
     </div>

@@ -28,10 +28,7 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // SAVE THE TOKEN
         localStorage.setItem('token', data.token);
-        
-        // Optional: Remove alert for a smoother feel, or keep it if you like
         alert('Login Successful!');
         navigate('/'); 
       } else {
@@ -44,7 +41,6 @@ const Login = () => {
   };
 
   return (
-    // Updated container with theme colors
     <div className="flex items-center justify-center h-screen px-4">
       <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-primary/20">
         
@@ -81,14 +77,22 @@ const Login = () => {
           >
             Enter Versa
           </button>
+          
           <div className="mt-6 text-center text-skin-muted">
             <p>
-                Don't have an account?{' '}
-                <Link to="/register" className="text-skin-primary font-bold hover:underline">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-skin-primary font-bold hover:underline">
                 Register here
-                </Link>
+              </Link>
             </p>
-        </div>
+          </div>
+
+          {/* ADD THIS SECTION */}
+          <div className="text-center text-skin-muted mt-4">
+            <Link to="/about" className="text-skin-primary font-medium hover:underline">
+              Learn more about VERSA
+            </Link>
+          </div>
         </form>
       </div>
     </div>
