@@ -10,17 +10,17 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   };
 
   return (
-    <div className="flex items-center justify-between mb-8 pr-32"> {/* Right padding prevents lamp overlap */}
-      
+    <div className="flex items-center justify-between mb-8 pl-32"> {/* Left padding prevents lamp overlap */}
+
       {/* 1. Toggle Switch */}
       <div className="bg-skin-card rounded-full p-1 flex shadow-inner">
-        <button 
+        <button
           onClick={() => setActiveTab('feed')}
           className={`px-6 py-2 rounded-full font-bold transition-all ${activeTab === 'feed' ? 'bg-skin-secondary text-white shadow-md' : 'text-skin-muted hover:text-skin-primary'}`}
         >
           Feed
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('leaderboard')}
           className={`px-6 py-2 rounded-full font-bold transition-all ${activeTab === 'leaderboard' ? 'bg-skin-secondary text-white shadow-md' : 'text-skin-muted hover:text-skin-primary'}`}
         >
@@ -32,14 +32,14 @@ const Navbar = ({ activeTab, setActiveTab }) => {
       <div className="flex items-center gap-4">
         {/* Icon Box */}
         <div className="bg-skin-card rounded-xl p-2 flex gap-4 shadow-sm border border-skin-muted/20">
-            {/* Placeholders for icons - You can replace with SVGs or react-icons */}
-            <button className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Notifications">🔔</button>
-            <button className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="About Us">ℹ️</button>
-            <button className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Profile">👤</button>
+          {/* Placeholders for icons - You can replace with SVGs or react-icons */}
+          <button className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Notifications">🔔</button>
+          <button className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="About Us">ℹ️</button>
+          <button onClick={() => navigate('/profile')} className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Profile">👤</button>
         </div>
 
         {/* Logout */}
-        <button 
+        <button
           onClick={handleLogout}
           className="w-10 h-10 bg-red-400/20 text-red-600 rounded-lg hover:bg-red-500 hover:text-white transition-all flex items-center justify-center font-bold"
           title="Logout"

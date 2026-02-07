@@ -15,9 +15,10 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected Successfully'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-  //routes
+//routes
 app.use('/api/auth', authRoutes);
 app.use('/api/stories', storyRoutes);
+app.use('/api/user', require('./routes/user'));
 app.get('/', (req, res) => {
   res.send('Versa API is running...');
 });

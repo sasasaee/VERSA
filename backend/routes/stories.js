@@ -26,6 +26,7 @@ router.post('/', auth, async (req, res) => {
     });
 
     const savedStory = await newStory.save();
+    await savedStory.populate('author', 'username rank profilePicture');
     res.json(savedStory);
   } catch (err) {
     console.error(err.message);
@@ -38,7 +39,7 @@ router.get('/', async (req, res) => {
   try {
     const stories = await Story.find()
       .sort({ createdAt: -1 })
-      .populate('author', 'username'); 
+      .populate('author', 'username profilePicture');
     res.json(stories);
   } catch (err) {
     console.error(err.message);
@@ -73,11 +74,11 @@ router.post('/segment/:id', auth, async (req, res) => {
 
     story.segments.push(newSegment);
     await story.save();
-    
+
     // Return the updated story with populated authors
     const updatedStory = await Story.findById(req.params.id)
-      .populate('segments.author', 'username')
-      .populate('author', 'username');
+      .populate('segments.author', 'username profilePicture')
+      .populate('author', 'username profilePicture');
 
     res.json(updatedStory);
 
@@ -91,7 +92,7 @@ router.post('/segment/:id', auth, async (req, res) => {
 router.put('/pause/:id', auth, async (req, res) => {
   try {
     const story = await Story.findById(req.params.id);
-    
+
     // Check ownership
     if (story.author.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'User not authorized' });
@@ -110,11 +111,11 @@ router.put('/pause/:id', auth, async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const story = await Story.findById(req.params.id)
-      .populate('author', 'username rank')
-      .populate('segments.author', 'username rank'); // Get rank for segment authors too
-    
+      .populate('author', 'username rank profilePicture')
+      .populate('segments.author', 'username rank profilePicture'); // Get rank for segment authors too
+
     if (!story) return res.status(404).json({ msg: 'Story not found' });
-    
+
     res.json(story);
   } catch (err) {
     console.error(err.message);

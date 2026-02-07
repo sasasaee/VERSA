@@ -22,6 +22,14 @@ const UserSchema = new mongoose.Schema({
     enum: ['beginner', 'master'], 
     default: 'beginner' 
   },
+  bio: {
+    type: String,
+    default: ''
+  },
+  profilePicture: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -4,8 +4,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -20,7 +18,7 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 3. Create the new user
+    // 3. Creates the new user
     user = new User({
       username,
       email,
@@ -29,7 +27,7 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
-    // 4. Create a Token (The "ID Card")
+    // 4. Create a Token
     const payload = { userId: user.id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
@@ -41,8 +39,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Authenticate user & get token
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
