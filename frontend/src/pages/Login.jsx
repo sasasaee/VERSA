@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import Toast from '../components/Toast';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
 
@@ -28,23 +30,23 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // SAVE THE TOKEN
         localStorage.setItem('token', data.token);
         
-        // Optional: Remove alert for a smoother feel, or keep it if you like
-        alert('Login Successful!');
-        navigate('/'); 
+        setToast({ message: '✓ Login Successful!', type: 'success' });
+        
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
       } else {
-        alert(data.message || 'Login Failed');
+        setToast({ message: data.message || 'Login Failed', type: 'error' });
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Server Error');
+      setToast({ message: 'Server Error', type: 'error' });
     }
   };
 
   return (
-    // Updated container with theme colors
     <div className="flex items-center justify-center h-screen px-4">
       <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-primary/20">
         
@@ -81,16 +83,32 @@ const Login = () => {
           >
             Enter Versa
           </button>
+          
           <div className="mt-6 text-center text-skin-muted">
             <p>
-                Don't have an account?{' '}
-                <Link to="/register" className="text-skin-primary font-bold hover:underline">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-skin-primary font-bold hover:underline">
                 Register here
-                </Link>
+              </Link>
             </p>
-        </div>
+          </div>
+
+          <div className="text-center text-skin-muted mt-4">
+            <Link to="/about" className="text-skin-primary font-medium hover:underline">
+              Learn more about VERSA
+            </Link>
+          </div>
         </form>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
     </div>
   );
 };
