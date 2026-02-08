@@ -16,6 +16,7 @@ export default {
           secondary: 'var(--secondary)',
           accent: 'var(--accent)',
           'on-primary': 'var(--text-on-primary)',
+          placeholder: 'var(--placeholder)',
         }
       },
       animation: {

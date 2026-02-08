@@ -74,7 +74,7 @@ const QuickWrite = ({ onStoryPosted }) => {
           <input
             type="text"
             placeholder="Start a new story..."
-            className="bg-transparent text-xl font-serif text-skin-text w-full outline-none pointer-events-none"
+            className="bg-transparent text-xl font-serif text-skin-text w-full outline-none pointer-events-none placeholder-skin-placeholder"
             readOnly
           />
         </div>
@@ -86,7 +86,7 @@ const QuickWrite = ({ onStoryPosted }) => {
             placeholder="Story Title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full text-2xl font-bold font-serif bg-transparent border-b border-skin-muted/30 pb-2 focus:border-skin-primary outline-none text-skin-primary"
+            className="w-full text-2xl font-bold font-serif bg-transparent border-b border-skin-muted/30 pb-2 focus:border-skin-primary outline-none text-skin-primary placeholder-skin-placeholder/60"
           />
 
           <textarea
@@ -94,7 +94,7 @@ const QuickWrite = ({ onStoryPosted }) => {
             value={formData.content}
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             maxLength={1000}
-            className="w-full h-32 bg-transparent outline-none text-lg text-skin-text resize-none font-serif leading-relaxed"
+            className="w-full h-32 bg-transparent outline-none text-lg text-skin-text resize-none font-serif leading-relaxed placeholder-skin-placeholder/70"
           ></textarea>
 
           <div className="flex flex-col gap-4">

@@ -16,6 +16,8 @@
   --text-on-primary: #FFFFFF;
   --petal-color-1: #A54F6B;
   --petal-color-2: #d26b8d;
+  --placeholder: #666666;
+  /* Muted brown for warm gray look */
 }
 
 [data-theme='dark'] {
@@ -28,9 +30,12 @@
   --primary: #574964;
   --secondary: #574964;
   --accent: #574964;
-  --text-on-primary: #574964;
+  --text-on-primary: #FFF5F5;
+  /* Light color for visibility on dark background */
   --petal-color-1: #574964;
   --petal-color-2: #7a6b8a;
+  --placeholder: #7a6b8a;
+  /* Soft light rose for dark mode */
 }
 
 /* Mapping to Tailwind classes */
