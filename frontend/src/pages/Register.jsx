@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import Toast from '../components/Toast';
+import FlowingPetals from '../components/FlowingPetals';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -46,8 +47,9 @@ const Register = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen px-4">
-      <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-muted/10">
+    <div className="flex items-center justify-center h-screen px-4 relative">
+      <FlowingPetals />
+      <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-muted/10 relative z-10 dark:border-none dark:shadow-2xl">
         <h2 className="text-3xl font-serif font-bold mb-8 text-center text-skin-primary">Sign Up</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -56,7 +58,7 @@ const Register = () => {
             name="username"
             placeholder="Username"
             onChange={handleChange}
-            className="w-full p-3 bg-skin-base border border-skin-muted rounded-lg focus:outline-none focus:border-skin-primary text-skin-text placeholder-skin-muted/50 transition-colors"
+            className="w-full p-2 border-b-2 bg-transparent border-skin-muted focus:outline-none focus:border-skin-primary text-skin-text placeholder-skin-muted/50 dark:placeholder-[var(--text-main)]"
             required
           />
           <input
@@ -64,7 +66,7 @@ const Register = () => {
             name="email"
             placeholder="Email"
             onChange={handleChange}
-            className="w-full p-3 bg-skin-base border border-skin-muted rounded-lg focus:outline-none focus:border-skin-primary text-skin-text placeholder-skin-muted/50 transition-colors"
+            className="w-full p-2 border-b-2 bg-transparent border-skin-muted focus:outline-none focus:border-skin-primary text-skin-text placeholder-skin-muted/50 transition-colors dark:placeholder-[var(--text-main)]"
             required
           />
           <input
@@ -72,7 +74,7 @@ const Register = () => {
             name="password"
             placeholder="Password"
             onChange={handleChange}
-            className="w-full p-3 bg-skin-base border border-skin-muted rounded-lg focus:outline-none focus:border-skin-primary text-skin-text placeholder-skin-muted/50 transition-colors"
+            className="w-full p-2 border-b-2 bg-transparent border-skin-muted focus:outline-none focus:border-skin-primary text-skin-text placeholder-skin-muted/50 transition-colors dark:placeholder-[var(--text-main)]"
             required
           />
           <button

@@ -14,6 +14,8 @@
   --secondary: #A54F6B;
   --accent: #B7A159;
   --text-on-primary: #FFFFFF;
+  --petal-color-1: #A54F6B;
+  --petal-color-2: #d26b8d;
 }
 
 [data-theme='dark'] {
@@ -22,11 +24,13 @@
   --bg-secondary: #8B7272;
   --bg-card: #C8AAAA;
   --text-main: #574964;
-  --text-muted: #FDF5E6;
+  --text-muted: #574964;
   --primary: #574964;
   --secondary: #574964;
   --accent: #574964;
   --text-on-primary: #574964;
+  --petal-color-1: #574964;
+  --petal-color-2: #7a6b8a;
 }
 
 /* Mapping to Tailwind classes */

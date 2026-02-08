@@ -1,0 +1,60 @@
+.petals-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    /* Behind content (z-10), in front of background */
+    pointer-events: none;
+    /* Let clicks pass through */
+}
+
+.petal {
+    position: absolute;
+    top: -10%;
+    /* Color handled by nth-child selectors */
+    opacity: 0.8;
+    border-radius: 100% 0% 100% 0%;
+    animation: fall linear infinite;
+}
+
+@keyframes fall {
+    0% {
+        top: -10%;
+        transform: translateX(0) rotate(0deg);
+        opacity: 0.8;
+    }
+
+    20% {
+        transform: translateX(20px) rotate(45deg);
+    }
+
+    40% {
+        transform: translateX(-20px) rotate(90deg);
+    }
+
+    60% {
+        transform: translateX(20px) rotate(135deg);
+    }
+
+    80% {
+        transform: translateX(-20px) rotate(180deg);
+    }
+
+    100% {
+        top: 110%;
+        transform: translateX(0) rotate(225deg);
+        opacity: 0;
+    }
+}
+
+/* Different sizes and animations for variety */
+.petal:nth-child(odd) {
+    background-color: var(--petal-color-2);
+}
+
+.petal:nth-child(even) {
+    background-color: var(--petal-color-1);
+}
