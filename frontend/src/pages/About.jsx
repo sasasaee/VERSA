@@ -12,14 +12,14 @@ const About = () => {
   return (
     <div className="min-h-screen bg-skin-base">
       {/* Enhanced Hero with animated background */}
-      <div className="relative bg-gradient-to-br from-skin-primary/30 via-skin-secondary/20 to-skin-primary/20 py-24 overflow-hidden">
+      <div className="relative bg-skin-primary/10 py-24 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-skin-primary/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-skin-secondary/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
         <div className={`relative max-w-4xl mx-auto px-4 text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-skin-primary via-skin-secondary to-skin-primary bg-clip-text text-transparent mb-6">
+          <h1 className="text-6xl font-bold text-skin-primary mb-6">
             About VERSA
           </h1>
           <p className="text-xl text-skin-text/90 leading-relaxed">
@@ -30,15 +30,15 @@ const About = () => {
 
       <div className="max-w-4xl mx-auto px-4 py-16 space-y-12">
         {/* What is VERSA - Your content with visual enhancement */}
-        <section className={`bg-skin-card/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-skin-primary/20 transition-all duration-700 hover:shadow-skin-primary/20 hover:border-skin-primary/40 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms' }}>
+        <section className={`bg-skin-card/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-skin-muted/10 transition-all duration-700 hover:shadow-skin-primary/20 hover:border-skin-primary/40 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`} style={{ transitionDelay: '200ms' }}>
           <h2 className="text-3xl font-bold text-skin-primary mb-4">What is VERSA?</h2>
           <p className="text-skin-text/80 leading-relaxed mb-4">
-            VERSA is a collaborative storytelling platform that brings writers together to create 
-            stories. Whether you're a beginner exploring your creative side or a master storyteller, 
+            VERSA is a collaborative storytelling platform that brings writers together to create
+            stories. Whether you're a beginner exploring your creative side or a master storyteller,
             VERSA provides the perfect space for you to share your imagination with the world.
           </p>
           <p className="text-skin-text/80 leading-relaxed">
-            Our platform allows users to start stories and invite others to continue them, creating 
+            Our platform allows users to start stories and invite others to continue them, creating
             multi-author narratives that evolve organically through community collaboration.
           </p>
         </section>
@@ -69,9 +69,9 @@ const About = () => {
                 desc: 'Showcase your stories, track contributions and build your reputation in the community.'
               }
             ].map((feature, index) => (
-              <div 
+              <div
                 key={index}
-                className="bg-skin-card rounded-xl p-6 border border-skin-primary/10 hover:border-skin-primary/30 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group"
+                className="bg-skin-card rounded-xl p-6 border border-skin-muted/10 hover:border-skin-primary/30 hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group"
               >
                 <div className="w-14 h-14 bg-skin-primary/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-skin-primary/30 transition-all duration-300">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7 text-skin-primary group-hover:rotate-12 transition-transform duration-300">
@@ -90,13 +90,13 @@ const About = () => {
         </section>
 
         {/* Mission with gradient border */}
-        <section className={`relative bg-gradient-to-br from-skin-primary/10 via-skin-secondary/10 to-skin-primary/10 rounded-2xl p-8 border-2 border-skin-primary/30 overflow-hidden transition-all duration-700 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} style={{ transitionDelay: '600ms' }}>
-          <div className="absolute inset-0 bg-gradient-to-r from-skin-primary/5 to-skin-secondary/5 animate-pulse"></div>
+        <section className={`relative bg-skin-primary/5 rounded-2xl p-8 border-2 border-skin-primary/30 overflow-hidden transition-all duration-700 ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} style={{ transitionDelay: '600ms' }}>
+          <div className="absolute inset-0 bg-skin-secondary/5 animate-pulse"></div>
           <div className="relative">
             <h2 className="text-3xl font-bold text-skin-primary mb-4 text-center">Our Mission</h2>
             <p className="text-skin-text/80 leading-relaxed text-center max-w-2xl mx-auto text-lg">
-              We believe that every person has a story to tell and that the best stories are created 
-              together. VERSA aims to break down the barriers of solo writing and foster a community 
+              We believe that every person has a story to tell and that the best stories are created
+              together. VERSA aims to break down the barriers of solo writing and foster a community
               where creativity flows freely, ideas merge seamlessly and every contributor's voice matters.
             </p>
           </div>
@@ -113,10 +113,10 @@ const About = () => {
               { num: 4, title: 'Become a Master', desc: 'Earn recognition and unlock special privileges as you contribute more.' }
             ].map(step => (
               <div key={step.num} className="flex gap-6 items-start group">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-skin-primary to-skin-secondary flex items-center justify-center text-white font-bold text-xl flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:shadow-skin-primary/50 transition-all duration-300">
+                <div className="w-12 h-12 rounded-full bg-skin-primary flex items-center justify-center text-skin-on-primary font-bold text-xl flex-shrink-0 shadow-lg group-hover:scale-110 group-hover:shadow-skin-primary/50 transition-all duration-300">
                   {step.num}
                 </div>
-                <div className="flex-1 bg-skin-card rounded-xl p-4 border border-skin-primary/10 group-hover:border-skin-primary/30 group-hover:shadow-lg transition-all duration-300">
+                <div className="flex-1 bg-skin-card rounded-xl p-4 border border-skin-muted/10 group-hover:border-skin-primary/30 group-hover:shadow-lg transition-all duration-300">
                   <h3 className="text-lg font-bold text-skin-primary mb-1 group-hover:text-skin-secondary transition-colors">{step.title}</h3>
                   <p className="text-skin-text/70">{step.desc}</p>
                 </div>
@@ -126,17 +126,17 @@ const About = () => {
         </section>
 
         {/* CTA with enhanced button */}
-        <section className={`bg-skin-card rounded-2xl p-12 shadow-2xl border border-skin-primary/20 text-center transition-all duration-700 hover:border-skin-primary/40 ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '1000ms' }}>
+        <section className={`bg-skin-card rounded-2xl p-12 shadow-2xl border border-skin-muted/10 text-center transition-all duration-700 hover:border-skin-primary/40 ${isVisible ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '1000ms' }}>
           <h2 className="text-3xl font-bold text-skin-primary mb-4">Ready to Start Your Story?</h2>
           <p className="text-skin-text/80 mb-8 text-lg">
             Join VERSA today and become part of a creative community that brings stories to life.
           </p>
           <button
             onClick={() => navigate('/register')}
-            className="relative px-10 py-4 bg-gradient-to-r from-skin-secondary to-skin-primary text-white rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-skin-secondary/50 hover:scale-105 transition-all duration-300 overflow-hidden group"
+            className="relative px-10 py-4 bg-skin-secondary text-white rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-skin-secondary/50 hover:scale-105 transition-all duration-300 overflow-hidden group"
           >
             <span className="relative z-10">Get Started</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-skin-primary to-skin-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-skin-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </button>
         </section>
 

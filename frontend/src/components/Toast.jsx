@@ -11,9 +11,9 @@ const Toast = ({ message, type = 'info', onClose }) => {
 
   // Use VERSA's color scheme
   const styles = {
-    success: 'bg-gradient-to-r from-skin-primary to-skin-secondary border-2 border-skin-primary/30',
-    error: 'bg-gradient-to-r from-gray-900 to-red-950 border-2 border-red-500/50',
-    info: 'bg-gradient-to-r from-skin-secondary to-skin-primary border-2 border-skin-secondary/30'
+    success: 'bg-skin-primary',
+    error: 'bg-red-900',
+    info: 'bg-skin-secondary'
   };
 
   const icons = {
@@ -22,15 +22,21 @@ const Toast = ({ message, type = 'info', onClose }) => {
     info: 'ℹ️'
   };
 
+  const textColors = {
+    success: 'text-skin-on-primary',
+    error: 'text-white',
+    info: 'text-white'
+  };
+
   return (
     <div className="fixed bottom-8 right-8 z-50 animate-slide-up">
-      <div className={`${styles[type]} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[280px] backdrop-blur-sm`}>
+      <div className={`${styles[type]} ${textColors[type]} px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[280px] backdrop-blur-sm`}>
         <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xl flex-shrink-0">
           {icons[type]}
         </div>
-        <p className="font-medium text-white">{message}</p>
+        <p className="font-medium">{message}</p>
       </div>
-      
+
       <style>{`
         @keyframes slide-up {
           from {

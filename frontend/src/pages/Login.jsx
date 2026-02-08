@@ -31,9 +31,9 @@ const Login = () => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        
+
         setToast({ message: '✓ Login Successful!', type: 'success' });
-        
+
         setTimeout(() => {
           navigate('/');
         }, 1500);
@@ -48,12 +48,12 @@ const Login = () => {
 
   return (
     <div className="flex items-center justify-center h-screen px-4">
-      <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-primary/20">
-        
+      <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-muted/10">
+
         <h2 className="text-3xl font-serif font-bold mb-8 text-center text-skin-primary">
           Login
         </h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <input
@@ -65,7 +65,7 @@ const Login = () => {
               required
             />
           </div>
-          
+
           <div>
             <input
               type="password"
@@ -83,7 +83,7 @@ const Login = () => {
           >
             Enter Versa
           </button>
-          
+
           <div className="mt-6 text-center text-skin-muted">
             <p>
               Don't have an account?{' '}
@@ -103,10 +103,10 @@ const Login = () => {
 
       {/* Toast */}
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast(null)} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>

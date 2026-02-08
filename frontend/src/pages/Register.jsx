@@ -32,7 +32,7 @@ const Register = () => {
 
       if (response.ok) {
         setToast({ message: '✓ Registration Successful! Redirecting to login...', type: 'success' });
-        
+
         setTimeout(() => {
           navigate('/login');
         }, 2000);
@@ -47,9 +47,9 @@ const Register = () => {
 
   return (
     <div className="flex items-center justify-center h-screen px-4">
-      <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-primary/20">
+      <div className="bg-skin-card p-10 rounded-2xl shadow-xl w-96 border border-skin-muted/10">
         <h2 className="text-3xl font-serif font-bold mb-8 text-center text-skin-primary">Sign Up</h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <input
             type="text"
@@ -81,7 +81,7 @@ const Register = () => {
           >
             Register
           </button>
-          
+
           <div className="mt-6 text-center text-skin-muted">
             <p>
               Already have an account?{' '}
@@ -101,10 +101,10 @@ const Register = () => {
 
       {/* Toast */}
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast(null)} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>

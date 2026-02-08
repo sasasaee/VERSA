@@ -165,7 +165,7 @@ const Dashboard = () => {
               stories.map((story) => (
                 <div
                   key={story._id}
-                  className="bg-skin-card rounded-2xl shadow-lg overflow-hidden border border-skin-primary/10 hover:shadow-xl transition-shadow"
+                  className="bg-skin-card rounded-2xl shadow-lg overflow-hidden border border-transparent hover:shadow-xl transition-shadow"
                 >
                   {/* IMAGE LOGIC: Only show if headerImage exists */}
                   {story.headerImage && (
@@ -177,7 +177,7 @@ const Dashboard = () => {
                       />
 
                       {/* Genre Badge on Image */}
-                      <span className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-white/20">
+                      <span className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-skin-muted/20">
                         {story.genre || 'General'}
                       </span>
                     </div>
@@ -196,7 +196,7 @@ const Dashboard = () => {
                           }
                         }}
                       >
-                        <div className="w-10 h-10 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-primary/30 overflow-hidden group-hover:border-skin-secondary transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-primary/10 overflow-hidden group-hover:border-skin-secondary transition-colors">
                           {story.author?.profilePicture ? (
                             <img
                               src={story.author.profilePicture}
@@ -249,11 +249,10 @@ const Dashboard = () => {
                           handleLike(story._id);
                         }}
                         disabled={String(story.author?._id) === String(currentUserId)}
-                        className={`flex items-center gap-2 group transition-all focus:outline-none ${
-                          String(story.author?._id) === String(currentUserId)
-                            ? 'opacity-50 cursor-not-allowed'
-                            : ''
-                        }`}
+                        className={`flex items-center gap-2 group transition-all focus:outline-none ${String(story.author?._id) === String(currentUserId)
+                          ? 'opacity-50 cursor-not-allowed'
+                          : ''
+                          }`}
                         title={
                           String(story.author?._id) === String(currentUserId)
                             ? "You cannot upvote your own story"
@@ -263,11 +262,10 @@ const Dashboard = () => {
                         <div className="relative">
                           {/* Glow Effect */}
                           <div
-                            className={`absolute inset-0 bg-skin-secondary/20 rounded-full blur-md transition-opacity duration-500 ${
-                              isLiked(story.upvotes)
-                                ? "opacity-100 scale-150"
-                                : "opacity-0 scale-0"
-                            }`}
+                            className={`absolute inset-0 bg-skin-secondary/20 rounded-full blur-md transition-opacity duration-500 ${isLiked(story.upvotes)
+                              ? "opacity-100 scale-150"
+                              : "opacity-0 scale-0"
+                              }`}
                           />
 
                           {/* Icon */}
@@ -276,11 +274,10 @@ const Dashboard = () => {
                             viewBox="0 0 24 24"
                             strokeWidth={1.5}
                             stroke="currentColor"
-                            className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${
-                              isLiked(story.upvotes)
-                                ? "fill-skin-primary text-skin-primary scale-110"
-                                : "fill-none text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
-                            }`}
+                            className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isLiked(story.upvotes)
+                              ? "fill-skin-primary text-skin-primary scale-110"
+                              : "fill-none text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
+                              }`}
                           >
                             <path
                               strokeLinecap="round"
@@ -291,11 +288,10 @@ const Dashboard = () => {
                         </div>
 
                         <span
-                          className={`font-medium text-sm transition-colors duration-300 ${
-                            isLiked(story.upvotes)
-                              ? "text-skin-primary font-bold"
-                              : "text-skin-muted"
-                          }`}
+                          className={`font-medium text-sm transition-colors duration-300 ${isLiked(story.upvotes)
+                            ? "text-skin-primary font-bold"
+                            : "text-skin-muted"
+                            }`}
                         >
                           {story.upvotes?.length || 0}
                         </span>

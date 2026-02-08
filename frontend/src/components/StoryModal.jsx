@@ -61,8 +61,8 @@ const StoryModal = ({ storyId, onClose }) => {
           {/* Header Image */}
           <div className="relative h-56">
             {story.headerImage && <img src={story.headerImage} className="w-full h-full object-cover" />}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
-              <h2 className="text-3xl font-serif font-bold text-white">{story.title}</h2>
+            <div className="absolute inset-0 bg-black/40 flex items-end p-6">
+              <h2 className="text-3xl font-serif font-bold text-skin-primary">{story.title}</h2>
             </div>
           </div>
 
@@ -72,7 +72,7 @@ const StoryModal = ({ storyId, onClose }) => {
               <div key={index} className="bg-skin-card p-4 rounded-xl shadow-sm border border-skin-muted/10">
                 <p className="text-skin-text font-serif leading-relaxed whitespace-pre-wrap">{seg.content}</p>
                 <div className="mt-3 flex items-center gap-2 text-xs text-skin-muted font-bold uppercase tracking-wider">
-                  <div className="w-5 h-5 rounded-full bg-skin-primary text-white flex items-center justify-center overflow-hidden">
+                  <div className="w-5 h-5 rounded-full bg-skin-primary text-skin-on-primary flex items-center justify-center overflow-hidden">
                     {seg.author?.profilePicture ? (
                       <img src={seg.author.profilePicture} alt={seg.author.username} className="w-full h-full object-cover" />
                     ) : (

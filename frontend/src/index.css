@@ -5,24 +5,28 @@
 /* Define the two themes using CSS variables */
 :root {
   /* Default Theme */
-  --bg-main: #F4F4F2;        
-  --bg-secondary: #EBEBE8;   
-  --text-main: #442D1C;       
-  --text-muted: #84592B;     
-  --primary: #BAB98B;        
-  --secondary: #A54F6B;     
-  --accent: #B7A159;         
+  --bg-main: #F4F4F2;
+  --bg-secondary: #EBEBE8;
+  --bg-card: #EBEBE8;
+  --text-main: #442D1C;
+  --text-muted: #84592B;
+  --primary: #BAB98B;
+  --secondary: #A54F6B;
+  --accent: #B7A159;
+  --text-on-primary: #FFFFFF;
 }
 
 [data-theme='dark'] {
-  /* Dark Theme */
-  --bg-main: #442D1C;        
-  --bg-secondary: #5C3D26;  
-  --text-main: #F4F4F2;      
-  --text-muted: #E8D1A7;     
-  --primary: #9D9167;        
-  --secondary: #743014;      
-  --accent: #E8D1A7;         
+  /* Joyful Medium Theme - Legible Typography */
+  --bg-main: #9F8383;
+  --bg-secondary: #8B7272;
+  --bg-card: #C8AAAA;
+  --text-main: #574964;
+  --text-muted: #FDF5E6;
+  --primary: #574964;
+  --secondary: #574964;
+  --accent: #574964;
+  --text-on-primary: #574964;
 }
 
 /* Mapping to Tailwind classes */

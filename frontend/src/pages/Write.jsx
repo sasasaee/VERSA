@@ -74,7 +74,7 @@ const Write = () => {
         <div className="flex flex-col gap-6">
 
           {preview && (
-            <div className="relative w-full h-80 rounded-2xl overflow-hidden shadow-xl border border-skin-primary/10">
+            <div className="relative w-full h-80 rounded-2xl overflow-hidden shadow-xl border border-skin-muted/10">
               <img src={preview} alt="Header Preview" className="w-full h-full object-cover" />
               <button
                 type="button"

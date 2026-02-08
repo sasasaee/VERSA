@@ -62,7 +62,7 @@ const QuickWrite = ({ onStoryPosted }) => {
   };
 
   return (
-    <div className="bg-skin-card rounded-2xl p-4 shadow-md border border-skin-muted/20 mb-8 transition-all duration-300">
+    <div className="bg-skin-card rounded-2xl p-4 shadow-md mb-8 transition-all duration-300">
 
       {/* 1. Collapsed View (Just the trigger) */}
       {!expanded ? (
@@ -74,7 +74,7 @@ const QuickWrite = ({ onStoryPosted }) => {
           <input
             type="text"
             placeholder="Start a new story..."
-            className="bg-transparent text-xl font-serif text-skin-muted w-full outline-none pointer-events-none"
+            className="bg-transparent text-xl font-serif text-skin-text w-full outline-none pointer-events-none"
             readOnly
           />
         </div>
@@ -86,7 +86,7 @@ const QuickWrite = ({ onStoryPosted }) => {
             placeholder="Story Title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full text-2xl font-bold font-serif bg-transparent border-b border-skin-muted/30 pb-2 focus:border-skin-primary outline-none text-skin-text"
+            className="w-full text-2xl font-bold font-serif bg-transparent border-b border-skin-muted/30 pb-2 focus:border-skin-primary outline-none text-skin-primary"
           />
 
           <textarea
@@ -99,7 +99,7 @@ const QuickWrite = ({ onStoryPosted }) => {
 
           <div className="flex flex-col gap-4">
             {preview && (
-              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-skin-muted/20">
+              <div className="relative w-full h-40 rounded-xl overflow-hidden border border-skin-muted/10">
                 <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                 <button
                   onClick={() => { setImageFile(null); setPreview(null); }}
@@ -112,7 +112,7 @@ const QuickWrite = ({ onStoryPosted }) => {
 
             <div className="flex items-center gap-4">
               <label className="flex-1 cursor-pointer">
-                <div className="flex items-center justify-center gap-2 bg-skin-base p-2 rounded-lg text-sm text-skin-text border border-dashed border-skin-muted/40 hover:border-skin-primary transition-colors">
+                <div className="flex items-center justify-center gap-2 bg-skin-base p-2 rounded-lg text-sm text-skin-text border border-dashed border-skin-muted/20 hover:border-skin-primary transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 opacity-60">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>

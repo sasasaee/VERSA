@@ -32,18 +32,18 @@ const Navbar = ({ activeTab, setActiveTab }) => {
       {/* 2. Right Side Controls */}
       <div className="flex items-center gap-4">
         {/* Icon Box */}
-        <div className="bg-skin-card rounded-xl p-2 flex gap-4 shadow-sm border border-skin-muted/20">
+        <div className="bg-skin-card rounded-xl p-2 flex gap-4 shadow-sm">
           {/* REPLACED: Notification bell with dropdown component */}
           <NotificationDropdown />
-          
-          <button 
+
+          <button
             onClick={() => navigate('/about')}
-            className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary cursor-pointer" 
+            className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary cursor-pointer"
             title="About Us"
           >
             ℹ️
           </button>
-          
+
           <button onClick={() => navigate('/profile')} className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Profile">👤</button>
         </div>
 

@@ -9,12 +9,13 @@ export default {
       colors: {
         skin: {
           base: 'var(--bg-main)',
-          card: 'var(--bg-secondary)',
+          card: 'var(--bg-card)',
           text: 'var(--text-main)',
           muted: 'var(--text-muted)',
           primary: 'var(--primary)',
           secondary: 'var(--secondary)',
           accent: 'var(--accent)',
+          'on-primary': 'var(--text-on-primary)',
         }
       },
       animation: {

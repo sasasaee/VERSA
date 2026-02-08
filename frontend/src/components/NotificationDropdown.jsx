@@ -51,7 +51,7 @@ const NotificationDropdown = () => {
         method: 'PUT',
         headers: { 'x-auth-token': token }
       });
-      
+
       setNotifications(prev =>
         prev.map(notif =>
           notif._id === notificationId ? { ...notif, isRead: true } : notif
@@ -70,7 +70,7 @@ const NotificationDropdown = () => {
         method: 'PUT',
         headers: { 'x-auth-token': token }
       });
-      
+
       setNotifications(prev => prev.map(notif => ({ ...notif, isRead: true })));
       setUnreadCount(0);
     } catch (err) {
@@ -144,9 +144,9 @@ const NotificationDropdown = () => {
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-80 bg-skin-card rounded-xl shadow-2xl border border-skin-primary/20 z-50 max-h-96 overflow-hidden flex flex-col">
+        <div className="absolute right-0 mt-2 w-80 bg-skin-card rounded-xl shadow-2xl border border-skin-muted/10 z-50 max-h-96 overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-skin-muted/20 flex items-center justify-between bg-gradient-to-r from-skin-primary/5 to-skin-secondary/5">
+          <div className="px-4 py-3 border-b border-skin-muted/20 flex items-center justify-between bg-skin-primary/10">
             <h3 className="font-bold text-skin-primary">Notifications</h3>
             {unreadCount > 0 && (
               <button
@@ -169,11 +169,10 @@ const NotificationDropdown = () => {
                 <div
                   key={notif._id}
                   onClick={() => handleNotificationClick(notif)}
-                  className={`px-4 py-3 border-b border-skin-muted/10 cursor-pointer transition-all ${
-                    notif.isRead
-                      ? 'bg-skin-base/50 hover:bg-skin-primary/5'
-                      : 'bg-skin-primary/10 hover:bg-skin-primary/15'
-                  }`}
+                  className={`px-4 py-3 border-b border-skin-muted/10 cursor-pointer transition-all ${notif.isRead
+                    ? 'bg-skin-base/50 hover:bg-skin-primary/5'
+                    : 'bg-skin-primary/10 hover:bg-skin-primary/15'
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-2xl flex-shrink-0">{getNotificationIcon(notif.type)}</span>

@@ -227,7 +227,7 @@ const Profile = () => {
                                     {!id && (
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="mt-6 bg-skin-primary text-white px-8 py-2.5 rounded-full hover:brightness-110 transition-all font-bold shadow-md active:scale-95"
+                                            className="mt-6 bg-skin-primary text-skin-on-primary px-8 py-2.5 rounded-full hover:brightness-110 transition-all font-bold shadow-md active:scale-95"
                                         >
                                             Edit Profile
                                         </button>
@@ -252,7 +252,7 @@ const Profile = () => {
                                         placeholder="Tell your story..."
                                     />
                                     <div className="flex gap-3">
-                                        <button type="submit" className="bg-skin-primary text-white px-6 py-2 rounded-full font-bold shadow-md hover:brightness-110">Save</button>
+                                        <button type="submit" className="bg-skin-primary text-skin-on-primary px-6 py-2 rounded-full font-bold shadow-md hover:brightness-110">Save</button>
                                         <button type="button" onClick={() => setIsEditing(false)} className="text-skin-muted hover:text-skin-text font-medium px-4">Cancel</button>
                                     </div>
                                 </form>
@@ -306,14 +306,14 @@ const Profile = () => {
                                     )}
                                     <div className="p-5 space-y-3">
                                         <div className="flex justify-between items-start">
-                                            <span className="px-2 py-0.5 bg-skin-primary/10 text-skin-primary text-[10px] font-bold uppercase rounded-md border border-skin-primary/10">
+                                            <span className="px-2 py-0.5 bg-skin-primary/10 text-skin-primary text-[10px] font-bold uppercase rounded-md border border-skin-muted/10">
                                                 {story.genre || 'General'}
                                             </span>
                                             <span className="text-[10px] text-skin-muted font-medium">
                                                 {new Date(story.updatedAt).toLocaleDateString()}
                                             </span>
                                         </div>
-                                        <h3 className="text-xl font-serif font-bold text-skin-text group-hover:text-skin-primary transition-colors line-clamp-1">{story.title}</h3>
+                                        <h3 className="text-xl font-serif font-bold text-skin-primary group-hover:text-skin-secondary transition-colors line-clamp-1">{story.title}</h3>
                                         <p className="text-sm text-skin-text/60 line-clamp-2 leading-relaxed">
                                             {story.segments?.[0]?.content || "No content yet."}
                                         </p>
