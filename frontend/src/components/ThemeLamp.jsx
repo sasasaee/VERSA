@@ -1,24 +1,30 @@
 import { useEffect, useState } from 'react';
 
 const ThemeLamp = () => {
-  const [theme, setTheme] = useState('light');
+  //const [theme, setTheme] = useState('light');
 
   // Check local storage on load
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+  // useEffect(() => {
+  //   const savedTheme = localStorage.getItem('theme') || 'light';
+  //   setTheme(savedTheme);
+  //   document.documentElement.setAttribute('data-theme', savedTheme);
+  // }, []);
 
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  const [theme, setTheme] = useState(savedTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newTheme = theme == 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme); //saves the choice
   };
 
   return (
-    <div className="absolute top-0 left-10 z-50 flex flex-col items-center">
+    <div className="fixed top-0 left-10 z-50 flex flex-col items-center">
       {/* The Cord */}
       <div className="w-1 h-24 bg-skin-text transition-colors duration-500"></div>
 

@@ -4,18 +4,31 @@ import './FlowingPetals.css';
 const FlowingPetals = () => {
     const [petals, setPetals] = useState([]);
 
+    // useEffect(() => {
+    //     const initialPetals = Array.from({ length: 20 }).map((_, i) => ({
+    //         id: i,
+    //         left: Math.random() * 100 + '%', //each petal gets a different left value
+    //         animationDuration: Math.random() * 5 + 5 + 's', // 5-10s
+    //         animationDelay: Math.random() * 5 + 's',
+    //         width: Math.random() * 20 + 10 + 'px',
+    //         height: Math.random() * 20 + 10 + 'px',
+    //     }));
+    //     setPetals(initialPetals);
+    // }, []);
     useEffect(() => {
+    const initPetals = () => {
         const initialPetals = Array.from({ length: 20 }).map((_, i) => ({
             id: i,
             left: Math.random() * 100 + '%',
-            animationDuration: Math.random() * 5 + 5 + 's', // 5-10s
+            animationDuration: Math.random() * 5 + 5 + 's',
             animationDelay: Math.random() * 5 + 's',
             width: Math.random() * 20 + 10 + 'px',
             height: Math.random() * 20 + 10 + 'px',
         }));
         setPetals(initialPetals);
-    }, []);
-
+    };
+    initPetals();
+}, []);
     return (
         <div className="petals-container">
             {petals.map((petal) => (

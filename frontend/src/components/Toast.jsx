@@ -9,9 +9,8 @@ const Toast = ({ message, type = 'info', onClose }) => {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  // Use VERSA's color scheme
   const styles = {
-    success: 'bg-skin-primary',
+    success: 'bg-skin-secondary',
     error: 'bg-red-900',
     info: 'bg-skin-secondary'
   };
@@ -19,13 +18,13 @@ const Toast = ({ message, type = 'info', onClose }) => {
   const icons = {
     success: '✓',
     error: '✕',
-    info: 'ℹ️'
+    //info: 'ℹ️'
   };
 
   const textColors = {
     success: 'text-skin-on-primary',
     error: 'text-white',
-    info: 'text-white'
+    info: 'text-skin-on-primary'
   };
 
   return (

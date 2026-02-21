@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Story = require('../models/Story');
 
 exports.getUserProfile = async (req, res) => {
     try {
@@ -79,6 +80,56 @@ exports.getUserById = async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ message: 'User not found' });
         }
+        res.status(500).send('Server Error');
+    }
+};
+
+exports.getSavedItems = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+            .populate({
+                path: 'savedStories',
+                populate: { path: 'author', select: 'username profilePicture' }
+            });
+
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        // Fetch stories that contain any of the user's saved segments
+        const storiesWithSavedSegments = await Story.find({
+            'segments._id': { $in: user.savedSegments }
+        }).populate('author', 'username profilePicture');
+
+        const savedSegments = [];
+        storiesWithSavedSegments.forEach(story => {
+            story.segments.forEach(segment => {
+                if (user.savedSegments.some(id => id.toString() === segment._id.toString())) {
+                    savedSegments.push({
+                        _id: segment._id,
+                        content: segment.content,
+                        storyId: story._id,
+                        storyTitle: story.title,
+                        updatedAt: segment.createdAt
+                    });
+                }
+            });
+        });
+
+        console.log(`DEBUG [SavedItems]: User ID: ${req.user.id}`);
+        console.log(`DEBUG [SavedItems]: Raw savedStories count: ${user.savedStories.length}`);
+
+        console.log(`DEBUG [SavedItems]: Found ${user.savedStories.length} stories and ${savedSegments.length} segments`);
+
+        // Final check on savedStories content
+        user.savedStories.forEach((s, i) => {
+            console.log(`DEBUG [SavedItems]: Story ${i}: ${s ? s.title : 'NULL'}`);
+        });
+
+        res.json({
+            savedStories: user.savedStories.filter(s => s !== null),
+            savedSegments: savedSegments
+        });
+    } catch (err) {
+        console.error(err.message);
         res.status(500).send('Server Error');
     }
 };
