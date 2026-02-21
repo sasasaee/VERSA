@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+import SortDropdown from '../components/SortDropdown';
 import StoryModal from '../components/StoryModal';
+import Toast from '../components/Toast';
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -15,10 +17,15 @@ const Profile = () => {
     });
     const [uploading, setUploading] = useState(false);
 
+    const [toast, setToast] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [userSavedStories, setUserSavedStories] = useState([]);
     const [stories, setStories] = useState([]);
     const [storiesLoading, setStoriesLoading] = useState(true);
     const [activeStoryTab, setActiveStoryTab] = useState('my-stories');
     const [selectedStoryId, setSelectedStoryId] = useState(null);
+    const [sortBy, setSortBy] = useState('newest');
+    const [filterGenre, setFilterGenre] = useState('All Genres');
 
     const { id } = useParams(); // Get ID from URL
     const navigate = useNavigate();
@@ -43,6 +50,16 @@ const Profile = () => {
         }
     })();
 
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.menu-container')) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
     const handleTabChange = (tab) => {
         if (tab === 'feed') navigate('/');
     };
@@ -58,6 +75,7 @@ const Profile = () => {
                 headers: { 'x-auth-token': token }
             });
             setUser(res.data);
+            setUserSavedStories(res.data.savedStories || []);
 
             if (!id) {
                 setFormData({
@@ -78,11 +96,7 @@ const Profile = () => {
             setStoriesLoading(true);
             const token = getCleanToken();
 
-            let userIdToFetch = id;
-            if (!userIdToFetch && token) {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                userIdToFetch = payload.userId;
-            }
+            let userIdToFetch = id || currentUserId;
 
             if (userIdToFetch) {
                 const res = await axios.get(`http://localhost:5000/api/stories/user/${userIdToFetch}`, {
@@ -104,6 +118,53 @@ const Profile = () => {
         init();
     }, [id]);
 
+    const handleSave = async (storyId) => {
+        const token = getCleanToken();
+        if (!token) return navigate('/login');
+
+        try {
+            const res = await fetch(`http://localhost:5000/api/stories/save/${storyId}`, {
+                method: 'POST',
+                headers: { 'x-auth-token': token }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setUserSavedStories(data.savedStories);
+                setToast({
+                    message: data.isSaved ? 'Story saved' : 'Story removed from saves',
+                    type: 'success'
+                });
+            }
+        } catch (err) {
+            console.error("Error saving story:", err);
+        }
+    };
+
+    const handleDelete = async (storyId) => {
+        if (!window.confirm("Are you sure you want to delete this story?")) return;
+        const token = getCleanToken();
+        if (!token) return navigate('/login');
+
+        try {
+            const res = await fetch(`http://localhost:5000/api/stories/${storyId}`, {
+                method: 'DELETE',
+                headers: { 'x-auth-token': token }
+            });
+
+            if (res.ok) {
+                setStories(stories.filter(s => s._id !== storyId));
+                setToast({ message: 'Story deleted successfully', type: 'success' });
+            } else {
+                const data = await res.json();
+                setToast({ message: data.msg || 'Failed to delete story', type: 'error' });
+            }
+        } catch (err) {
+            console.error("Error deleting story:", err);
+            setToast({ message: 'Error deleting story', type: 'error' });
+        }
+    };
+
     const filteredStories = stories.filter(story => {
         const profileUserIdStr = String(id || currentUserId);
         const authorIdStr = String(story.author?._id || story.author);
@@ -117,6 +178,22 @@ const Profile = () => {
             return !isAuthor;
         }
     });
+
+    const sortedStories = (() => {
+        let list = [...filteredStories];
+
+        // Filter by genre if sortBy is 'genre' AND a specific genre is selected
+        if (sortBy === 'genre' && filterGenre !== 'All Genres') {
+            list = list.filter(s => (s.genre || 'General') === filterGenre);
+        }
+
+        return list.sort((a, b) => {
+            if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+            if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+            if (sortBy === 'genre') return (a.genre || '').localeCompare(b.genre || '');
+            return 0;
+        });
+    })();
 
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -162,24 +239,24 @@ const Profile = () => {
         }
     };
 
-    if (loading) return <div className="text-center text-skin-base mt-10">Loading...</div>;
+    if (loading) return <div className="text-center text-skin-base mt-20 p-10"><div className="animate-spin w-8 h-8 border-4 border-skin-primary border-t-transparent rounded-full mx-auto mb-4"></div>Loading...</div>;
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
     if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-skin-base text-skin-text p-4 pb-20">
-            <Navbar activeTab="profile" setActiveTab={handleTabChange} />
+        <div className="min-h-screen bg-skin-base text-skin-text pb-20">
+            <Navbar isProfile={true} />
 
-            <div className="max-w-4xl mx-auto space-y-8 mt-10">
+            <div className="max-w-4xl mx-auto space-y-8 mt-10 px-4">
                 {/*Profile Header Card */}
                 <div className="bg-skin-card rounded-2xl p-8 shadow-lg border border-skin-muted/10 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-skin-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
 
                     <div className="flex flex-col md:flex-row gap-8 items-center md:items-start relative z-10">
                         <div className="flex flex-col items-center gap-4">
-                            <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-skin-primary/20 shadow-inner relative bg-skin-muted/10">
+                            <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-skin-primary/20 shadow-inner relative bg-skin-muted/10 group">
                                 {user.profilePicture ? (
-                                    <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                                    <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-6xl opacity-20">👤</div>
                                 )}
@@ -262,44 +339,51 @@ const Profile = () => {
 
                 {/* Stories Dashboard */}
                 <div className="space-y-6">
-                    <div className="flex gap-8 border-b border-skin-muted/20 pb-1">
-                        <button
-                            onClick={() => setActiveStoryTab('my-stories')}
-                            className={`pb-3 text-sm font-bold uppercase tracking-widest transition-all relative ${activeStoryTab === 'my-stories' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
-                        >
-                            {id ? `${user.username}'s Stories` : "My Stories"}
-                            {activeStoryTab === 'my-stories' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
-                        </button>
-                        <button
-                            onClick={() => setActiveStoryTab('contributions')}
-                            className={`pb-3 text-sm font-bold uppercase tracking-widest transition-all relative ${activeStoryTab === 'contributions' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
-                        >
-                            Contributions
-                            {activeStoryTab === 'contributions' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
-                        </button>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-skin-muted/20 pb-4">
+                        <div className="flex gap-8">
+                            <button
+                                onClick={() => setActiveStoryTab('my-stories')}
+                                className={`pb-3 text-sm font-bold uppercase tracking-widest transition-all relative ${activeStoryTab === 'my-stories' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+                            >
+                                {id ? `${user.username}'s Stories` : "My Stories"}
+                                {activeStoryTab === 'my-stories' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
+                            </button>
+                            <button
+                                onClick={() => setActiveStoryTab('contributions')}
+                                className={`pb-3 text-sm font-bold uppercase tracking-widest transition-all relative ${activeStoryTab === 'contributions' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+                            >
+                                Contributions
+                                {activeStoryTab === 'contributions' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
+                            </button>
+                        </div>
+
+                        {/* Profile Specific sorting dropdown */}
+                        <SortDropdown
+                            sortBy={sortBy}
+                            setSortBy={setSortBy}
+                            filterGenre={filterGenre}
+                            setFilterGenre={setFilterGenre}
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {storiesLoading ? (
-                            <div className="col-span-full py-20 text-center text-skin-muted">
-                                <div className="animate-pulse flex flex-col items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-skin-muted/20"></div>
-                                    <p>Loading stories...</p>
-                                </div>
+                            <div className="col-span-full py-20 text-center text-skin-muted flex flex-col items-center">
+                                <div className="animate-spin w-6 h-6 border-2 border-skin-primary border-t-transparent rounded-full mb-2"></div>
+                                Loading stories...
                             </div>
-                        ) : filteredStories.length === 0 ? (
+                        ) : sortedStories.length === 0 ? (
                             <div className="col-span-full py-20 text-center bg-skin-muted/5 rounded-3xl border border-dashed border-skin-muted/30">
                                 <p className="text-skin-muted font-serif italic text-lg">No stories found in this category.</p>
                             </div>
                         ) : (
-                            filteredStories.map(story => (
+                            sortedStories.map(story => (
                                 <div
                                     key={story._id}
-                                    onClick={() => setSelectedStoryId(story._id)}
-                                    className="group bg-skin-card rounded-2xl overflow-hidden border border-skin-muted/20 hover:border-skin-primary/30 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                                    className="group bg-skin-card rounded-2xl overflow-hidden border border-skin-muted/20 hover:border-skin-primary/30 hover:shadow-xl transition-all duration-300 relative"
                                 >
                                     {story.headerImage && (
-                                        <div className="h-32 w-full overflow-hidden">
+                                        <div className="h-32 w-full overflow-hidden cursor-pointer" onClick={() => setSelectedStoryId(story._id)}>
                                             <img src={story.headerImage} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         </div>
                                     )}
@@ -308,12 +392,63 @@ const Profile = () => {
                                             <span className="px-2 py-0.5 bg-skin-primary/10 text-skin-primary text-[10px] font-bold uppercase rounded-md border border-skin-muted/10">
                                                 {story.genre || 'General'}
                                             </span>
-                                            <span className="text-[10px] text-skin-muted font-medium">
-                                                {new Date(story.updatedAt).toLocaleDateString()}
-                                            </span>
+
+                                            <div className="flex items-center gap-2 menu-container">
+                                                <span className="text-[10px] text-skin-muted font-medium">
+                                                    {new Date(story.updatedAt).toLocaleDateString()}
+                                                </span>
+
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenMenuId(openMenuId === story._id ? null : story._id);
+                                                        }}
+                                                        className="p-1 text-skin-muted hover:text-skin-primary transition-colors focus:outline-none"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-[18px] h-[18px]">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                                                        </svg>
+                                                    </button>
+
+                                                    {openMenuId === story._id && (
+                                                        <div className="absolute right-0 top-full mt-1 w-48 bg-skin-card border border-skin-muted/20 rounded-xl shadow-xl z-[40] py-2 animate-fade-in text-left">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleSave(story._id);
+                                                                    setOpenMenuId(null);
+                                                                }}
+                                                                className="w-full text-left px-4 py-2 text-sm text-skin-text hover:bg-skin-primary/10 transition-colors flex items-center gap-2"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill={userSavedStories.includes(story._id) ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                                                                </svg>
+                                                                {userSavedStories.includes(story._id) ? 'Unsave Story' : 'Save Story'}
+                                                            </button>
+
+                                                            {String(story.author?._id || story.author) === String(currentUserId) && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDelete(story._id);
+                                                                        setOpenMenuId(null);
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2"
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                                                    </svg>
+                                                                    Delete Story
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                        <h3 className="text-xl font-serif font-bold text-skin-primary group-hover:text-skin-secondary transition-colors line-clamp-1">{story.title}</h3>
-                                        <p className="text-sm text-skin-text/60 line-clamp-2 leading-relaxed">
+                                        <h3 className="text-xl font-serif font-bold text-skin-primary group-hover:text-skin-secondary transition-colors line-clamp-1 cursor-pointer" onClick={() => setSelectedStoryId(story._id)}>{story.title}</h3>
+                                        <p className="text-sm text-skin-text/60 line-clamp-2 leading-relaxed cursor-pointer" onClick={() => setSelectedStoryId(story._id)}>
                                             {story.segments?.[0]?.content || "No content yet."}
                                         </p>
                                         <div className="flex items-center justify-between pt-2 border-t border-skin-muted/10">
@@ -343,6 +478,15 @@ const Profile = () => {
                 <StoryModal
                     storyId={selectedStoryId}
                     onClose={() => setSelectedStoryId(null)}
+                />
+            )}
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
                 />
             )}
         </div>

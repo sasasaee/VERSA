@@ -18,9 +18,9 @@ const UserSchema = new mongoose.Schema({
     required: true
   },
   rank: {
-    type: String, 
-    enum: ['beginner', 'master'], 
-    default: 'beginner' 
+    type: String,
+    enum: ['beginner', 'master'],
+    default: 'beginner'
   },
   bio: {
     type: String,
@@ -30,6 +30,14 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  savedStories: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Story'
+  }],
+  savedSegments: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Story'
+  }],
   createdAt: {
     type: Date,
     default: Date.now

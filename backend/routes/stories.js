@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Story = require('../models/Story');
 const auth = require('../middleware/auth');
-const Notification = require('../models/Notification'); 
+const Notification = require('../models/Notification');
 const upload = require('../middleware/upload');
 
 // POST: Create a new story
@@ -40,6 +40,36 @@ router.post('/', [auth, upload.single('headerImage')], async (req, res) => {
     const savedStory = await newStory.save();
     await savedStory.populate('author', 'username rank profilePicture');
     res.json(savedStory);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// GET: Search stories
+router.get('/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json([]);
+
+    const regex = new RegExp(q, 'i');
+
+    // Find users matching username
+    const User = require('../models/User');
+    const users = await User.find({ username: regex }).select('_id');
+    const userIds = users.map(u => u._id);
+
+    const stories = await Story.find({
+      $or: [
+        { title: regex },
+        { genre: regex },
+        { author: { $in: userIds } }
+      ]
+    })
+      .populate('author', 'username profilePicture')
+      .sort({ createdAt: -1 });
+
+    res.json(stories);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -207,6 +237,112 @@ router.put('/like/:id', auth, async (req, res) => {
 
     await story.save();
     res.json(story.upvotes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// POST: Save/Unsave Story
+router.post('/save/:id', auth, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    const storyId = req.params.id;
+    const isSaved = user.savedStories.includes(storyId);
+
+    if (isSaved) {
+      // Unsave
+      user.savedStories = user.savedStories.filter(id => id.toString() !== storyId);
+    } else {
+      // Save
+      user.savedStories.push(storyId);
+    }
+
+    await user.save();
+    res.json({ isSaved: !isSaved, savedStories: user.savedStories });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// POST: Save/Unsave a specific segment
+router.post('/save-segment/:storyId/:segmentId', auth, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    const { segmentId } = req.params;
+    const isSaved = user.savedSegments.includes(segmentId);
+
+    if (isSaved) {
+      user.savedSegments = user.savedSegments.filter(id => id.toString() !== segmentId);
+    } else {
+      user.savedSegments.push(segmentId);
+    }
+
+    await user.save();
+    res.json({ isSaved: !isSaved, savedSegments: user.savedSegments });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// DELETE: Delete a story
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    // Check if the user is the original author
+    if (story.author.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized to delete this story' });
+    }
+
+    await Story.findByIdAndDelete(req.params.id);
+    res.json({ msg: 'Story removed' });
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Story not found' });
+    res.status(500).send('Server Error');
+  }
+});
+
+// DELETE: Delete a segment (contribution)
+router.delete('/segment/:storyId/:segmentId', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.storyId);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    // Find the segment
+    const segmentIndex = story.segments.findIndex(s => s._id.toString() === req.params.segmentId);
+    if (segmentIndex === -1) return res.status(404).json({ msg: 'Segment not found' });
+
+    // Check if the user is the author of the segment
+    if (story.segments[segmentIndex].author.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized to delete this contribution' });
+    }
+
+    // Don't allow deleting the first segment via this route? 
+    // Actually, if they delete the first segment, the story has no content.
+    // The user said "you can delete my stories too", so maybe story delete is for the first segment.
+    if (segmentIndex === 0) {
+      return res.status(400).json({ msg: 'To delete the original story, use the story delete option.' });
+    }
+
+    story.segments.splice(segmentIndex, 1);
+    await story.save();
+
+    const updatedStory = await Story.findById(req.params.storyId)
+      .populate('segments.author', 'username rank profilePicture')
+      .populate('author', 'username rank profilePicture');
+
+    res.json(updatedStory);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
