@@ -416,10 +416,10 @@ const Dashboard = () => {
                                 }}
                                 className="w-full text-left px-4 py-2 text-sm text-skin-text hover:bg-skin-primary/10 transition-colors flex items-center gap-2"
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill={userSavedStories.includes(story._id) ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill={userSavedStories.some(id => String(id) === String(story._id)) ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
                                 </svg>
-                                {userSavedStories.includes(story._id) ? 'Unsave Story' : 'Save Story'}
+                                {userSavedStories.some(id => String(id) === String(story._id)) ? 'Unsave Story' : 'Save Story'}
                               </button>
 
                               {String(story.author?._id) === String(currentUserId) && (
@@ -516,10 +516,10 @@ const Dashboard = () => {
                             e.stopPropagation();
                             handleSave(story._id);
                           }}
-                          className={`flex items-center gap-2 group transition-all focus:outline-none ${userSavedStories.includes(story._id) ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-secondary'}`}
-                          title={userSavedStories.includes(story._id) ? "Unsave story" : "Save story"}
+                          className={`flex items-center gap-2 group transition-all focus:outline-none ${userSavedStories.some(id => String(id) === String(story._id)) ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-secondary'}`}
+                          title={userSavedStories.some(id => String(id) === String(story._id)) ? "Unsave story" : "Save story"}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill={userSavedStories.includes(story._id) ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill={userSavedStories.some(id => String(id) === String(story._id)) ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
                           </svg>
                         </button>

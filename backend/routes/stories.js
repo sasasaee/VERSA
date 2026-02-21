@@ -251,7 +251,7 @@ router.post('/save/:id', auth, async (req, res) => {
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
     const storyId = req.params.id;
-    const isSaved = user.savedStories.includes(storyId);
+    const isSaved = user.savedStories.some(id => id.toString() === storyId);
 
     if (isSaved) {
       // Unsave
@@ -277,7 +277,7 @@ router.post('/save-segment/:storyId/:segmentId', auth, async (req, res) => {
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
     const { segmentId } = req.params;
-    const isSaved = user.savedSegments.includes(segmentId);
+    const isSaved = user.savedSegments.some(id => id.toString() === segmentId);
 
     if (isSaved) {
       user.savedSegments = user.savedSegments.filter(id => id.toString() !== segmentId);

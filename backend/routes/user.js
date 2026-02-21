@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getUserProfile, updateUserProfile, uploadProfilePicture, getUserById } = require('../controllers/userController');
-const auth = require('../middleware/auth'); 
+const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 // Get profile
@@ -15,5 +15,8 @@ router.post('/profile/picture', auth, upload.single('profilePicture'), uploadPro
 
 // Get user by ID
 router.get('/:id', auth, getUserById);
+
+// Get saved stories and segments
+router.get('/saved', auth, require('../controllers/userController').getSavedItems);
 
 module.exports = router;
