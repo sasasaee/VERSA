@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 
 const ThemeLamp = () => {
-  const [theme, setTheme] = useState('light');
+  //const [theme, setTheme] = useState('light');
 
   // Check local storage on load
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
+  // useEffect(() => {
+  //   const savedTheme = localStorage.getItem('theme') || 'light';
+  //   setTheme(savedTheme);
+  //   document.documentElement.setAttribute('data-theme', savedTheme);
+  // }, []);
 
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  const [theme, setTheme] = useState(savedTheme);
+
+useEffect(() => {
+  document.documentElement.setAttribute('data-theme', theme);
+}, [theme]);
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newTheme = theme == 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme); //saves the choice

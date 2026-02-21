@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Story = require('../models/Story');
 const auth = require('../middleware/auth');
-const Notification = require('../models/Notification'); // ADD THIS
+const Notification = require('../models/Notification'); 
 const upload = require('../middleware/upload');
 
 // POST: Create a new story

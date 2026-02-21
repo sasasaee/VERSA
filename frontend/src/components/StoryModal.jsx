@@ -21,7 +21,15 @@ const StoryModal = ({ storyId, onClose }) => {
     if (storyId) fetchStory();
   }, [storyId]);
 
+  const getWordCount = (str) => {
+    return str.trim().split(/\s+/).filter(Boolean).length;
+  };
+
   const handlePublish = async () => {
+    if (getWordCount(newSegment) > 200) {
+      return alert("Continuation cannot exceed 200 words.");
+    }
+
     const token = localStorage.getItem('token');
     try {
       const res = await fetch(`http://localhost:5000/api/stories/segment/${storyId}`, {
@@ -47,6 +55,8 @@ const StoryModal = ({ storyId, onClose }) => {
   };
 
   if (!story) return null;
+
+  const wordCount = getWordCount(newSegment);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -96,13 +106,15 @@ const StoryModal = ({ storyId, onClose }) => {
                     onChange={(e) => setNewSegment(e.target.value)}
                     className="w-full h-24 bg-transparent border-b border-skin-muted focus:border-skin-secondary outline-none text-skin-text resize-none"
                     placeholder="Continue the story (Max 200 words)..."
-                    maxLength={1000}
                   ></textarea>
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-xs text-skin-muted">{newSegment.length}/1000</span>
+                    <span className={`text-xs ${wordCount > 200 ? 'text-red-500 font-bold' : 'text-skin-muted'}`}>
+                      {wordCount}/200 words
+                    </span>
                     <button
                       onClick={handlePublish}
-                      className="px-4 py-2 bg-skin-secondary text-white rounded-lg font-bold hover:shadow-lg transition-all text-sm"
+                      disabled={wordCount > 200}
+                      className={`px-4 py-2 bg-skin-secondary text-white rounded-lg font-bold hover:shadow-lg transition-all text-sm ${wordCount > 200 ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       Publish
                     </button>

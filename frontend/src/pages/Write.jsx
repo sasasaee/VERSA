@@ -20,8 +20,16 @@ const Write = () => {
     }
   };
 
+  const getWordCount = (str) => {
+    return str.trim().split(/\s+/).filter(Boolean).length;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (getWordCount(content) > 200) {
+      return alert("Story content cannot exceed 200 words.");
+    }
 
     try {
       let rawToken = localStorage.getItem('token');
@@ -66,11 +74,13 @@ const Write = () => {
     }
   };
 
+  const wordCount = getWordCount(content);
+
   return (
     <div className="pt-24 px-4 max-w-4xl mx-auto min-h-screen">
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* --- 1. Top Bar: Genre & Upload --- */}
+        {/* top Bar: Genre & Upload*/}
         <div className="flex flex-col gap-6">
 
           {preview && (
@@ -116,7 +126,7 @@ const Write = () => {
           </div>
         </div>
 
-        {/* 2. Title Input */}
+        {/* Title Input */}
         <div className="relative group">
           <input
             type="text"
@@ -128,25 +138,24 @@ const Write = () => {
           />
         </div>
 
-        {/* 3. Story Body */}
+        {/* Story Body */}
         <div>
           <textarea
             placeholder="Start your story here... (Limit: 200 words)"
             className="w-full h-[40vh] text-xl leading-relaxed bg-transparent outline-none resize-none placeholder-skin-muted/40 text-skin-text font-light"
             onChange={(e) => setContent(e.target.value)}
-            maxLength={1000}
             required
           ></textarea>
-          <div className="text-right text-skin-muted text-sm">
-            {content.length}/1000 characters
+          <div className={`text-right text-sm ${wordCount > 200 ? 'text-red-500 font-bold' : 'text-skin-muted'}`}>
+            {wordCount}/200 words
           </div>
         </div>
 
-        {/* 4. Publish Button */}
+        {/*Publish Button */}
         <button
           type="submit"
-          disabled={loading}
-          className={`fixed bottom-10 right-10 px-8 py-3 bg-skin-secondary text-white rounded-full font-bold shadow-lg hover:scale-110 hover:shadow-xl transition-all z-20 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={loading || wordCount > 200}
+          className={`fixed bottom-10 right-10 px-8 py-3 bg-skin-secondary text-white rounded-full font-bold shadow-lg hover:scale-110 hover:shadow-xl transition-all z-20 ${loading || wordCount > 200 ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {loading ? 'Publishing...' : 'Publish Story'}
         </button>

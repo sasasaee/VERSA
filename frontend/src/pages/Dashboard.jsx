@@ -6,7 +6,7 @@ import QuickWrite from '../components/QuickWrite';
 import StoryModal from '../components/StoryModal';
 import Toast from '../components/Toast';
 
-// --- 1. HELPER: Get current user ID to check if we liked the story ---
+// Get current user ID to check if we liked the story
 const getUserIdFromToken = (token) => {
   if (!token) return null;
 
@@ -46,7 +46,7 @@ const Dashboard = () => {
           headers: { 'x-auth-token': token }
         });
 
-        // Security Check: Token invalid/expired?
+        //Token invalid/expired?
         if (res.status === 401) {
           localStorage.removeItem('token');
           navigate('/login');
@@ -73,7 +73,7 @@ const Dashboard = () => {
     setStories([story, ...stories]);
   };
 
-  // --- 2. NEW: Handle Like Function ---
+  //Handle Like Function 
   const handleLike = async (storyId) => {
     let rawToken = localStorage.getItem('token');
 
@@ -84,7 +84,7 @@ const Dashboard = () => {
 
     const cleanToken = rawToken.replace(/^"|"$/g, '');
 
-    // Check if currently liked (before making the request)
+    // Check if currently liked
     const story = stories.find(s => String(s._id) === String(storyId));
     const wasLiked = isLiked(story?.upvotes);
 
@@ -134,7 +134,7 @@ const Dashboard = () => {
     }
   };
 
-  // --- 3. ROBUST CHECK IF LIKED ---
+  //check if liked
   const isLiked = (upvotes) => {
     if (!upvotes || !currentUserId) return false;
 
@@ -142,7 +142,7 @@ const Dashboard = () => {
     return upvotes.some(id => String(id) === String(currentUserId));
   };
 
-  // Stop rendering if no token (prevents flash)
+  // Stop rendering if no token
   if (!token) {
     return null;
   }
@@ -167,7 +167,6 @@ const Dashboard = () => {
                   key={story._id}
                   className="bg-skin-card rounded-2xl shadow-lg overflow-hidden border border-transparent hover:shadow-xl transition-shadow"
                 >
-                  {/* IMAGE LOGIC: Only show if headerImage exists */}
                   {story.headerImage && (
                     <div className="h-48 w-full overflow-hidden relative bg-skin-muted/20">
                       <img
@@ -185,7 +184,7 @@ const Dashboard = () => {
 
                   {/* Card Body */}
                   <div className="p-6">
-                    {/* Top Row: Author Info */}
+                    {/*Author Info */}
                     <div className="flex items-center justify-between mb-4">
                       <div
                         className="flex items-center gap-3 cursor-pointer group"
@@ -221,7 +220,6 @@ const Dashboard = () => {
                         </div>
                       </div>
 
-                      {/* Alternative Genre Location (If no image) */}
                       {!story.headerImage && (
                         <span className="text-xs font-medium text-skin-muted bg-skin-muted/10 border border-skin-muted/20 px-3 py-1 rounded-full">
                           {story.genre || 'General'}
@@ -239,7 +237,7 @@ const Dashboard = () => {
                         : "No preview available."}
                     </p>
 
-                    {/* --- 3. NEW ACTION BAR: UPVOTE + READ BUTTON --- */}
+                    {/* upvote and read button */}
                     <div className="flex items-center justify-between border-t border-skin-muted/20 pt-4">
                       {/* BOOK UPVOTE BUTTON */}
                       <button
@@ -268,7 +266,6 @@ const Dashboard = () => {
                               }`}
                           />
 
-                          {/* Icon */}
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"
@@ -297,7 +294,7 @@ const Dashboard = () => {
                         </span>
                       </button>
 
-                      {/* READ BUTTON */}
+                      {/* read button */}
                       <button
                         onClick={() => setSelectedStoryId(story._id)}
                         className="px-6 py-2 bg-skin-secondary text-white rounded-full font-bold text-sm hover:brightness-110 shadow-md transition-all"

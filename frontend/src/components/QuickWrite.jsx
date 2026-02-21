@@ -10,20 +10,28 @@ const QuickWrite = ({ onStoryPosted }) => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
-      setPreview(URL.createObjectURL(file));
+      setImageFile(file); //save
+      setPreview(URL.createObjectURL(file)); //for displaying the image 
     }
+  };
+
+  const getWordCount = (str) => {
+    return str.trim().split(/\s+/).filter(Boolean).length;
   };
 
   const handleSubmit = async () => {
     let rawToken = localStorage.getItem('token');
     if (!rawToken) return alert("Please login first");
 
-    // Clean token (removes extra quotes if present)
+    // Clean token- removes extra quotes if present
     const token = rawToken.replace(/^"|"$/g, '');
 
     if (!formData.title.trim() || !formData.content.trim()) {
       return alert("Please fill in both the title and the story content.");
+    }
+
+    if (getWordCount(formData.content) > 200) {
+      return alert("Story content cannot exceed 200 words.");
     }
 
     setLoading(true);
@@ -44,7 +52,7 @@ const QuickWrite = ({ onStoryPosted }) => {
 
       if (res.ok) {
         const newStory = await res.json();
-        onStoryPosted(newStory); // Update parent feed instantly
+        onStoryPosted(newStory); // Update feed instantly
         setFormData({ title: '', content: '', genre: 'General' }); // Reset
         setImageFile(null);
         setPreview(null);
@@ -61,10 +69,12 @@ const QuickWrite = ({ onStoryPosted }) => {
     }
   };
 
+  const wordCount = getWordCount(formData.content);
+
   return (
     <div className="bg-skin-card rounded-2xl p-4 shadow-md mb-8 transition-all duration-300">
 
-      {/* 1. Collapsed View (Just the trigger) */}
+      {/* collapsed View trigger*/}
       {!expanded ? (
         <div
           onClick={() => setExpanded(true)}
@@ -79,7 +89,7 @@ const QuickWrite = ({ onStoryPosted }) => {
           />
         </div>
       ) : (
-        /* 2. Expanded View (Full Form) */
+        /* Expanded View */
         <div className="space-y-4 animate-fade-in">
           <input
             type="text"
@@ -89,13 +99,17 @@ const QuickWrite = ({ onStoryPosted }) => {
             className="w-full text-2xl font-bold font-serif bg-transparent border-b border-skin-muted/30 pb-2 focus:border-skin-primary outline-none text-skin-primary placeholder-skin-placeholder/60"
           />
 
-          <textarea
-            placeholder="Once upon a time... (Max 200 words)"
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            maxLength={1000}
-            className="w-full h-32 bg-transparent outline-none text-lg text-skin-text resize-none font-serif leading-relaxed placeholder-skin-placeholder/70"
-          ></textarea>
+          <div>
+            <textarea
+              placeholder="Once upon a time... (Max 200 words)"
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              className="w-full h-32 bg-transparent outline-none text-lg text-skin-text resize-none font-serif leading-relaxed placeholder-skin-placeholder/70"
+            ></textarea>
+            <div className={`text-right text-xs mt-1 ${wordCount > 200 ? 'text-red-500 font-bold' : 'text-skin-muted'}`}>
+              {wordCount}/200 words
+            </div>
+          </div>
 
           <div className="flex flex-col gap-4">
             {preview && (
@@ -143,8 +157,8 @@ const QuickWrite = ({ onStoryPosted }) => {
             <button onClick={() => setExpanded(false)} className="px-4 py-2 text-skin-muted hover:text-skin-text">Cancel</button>
             <button
               onClick={handleSubmit}
-              disabled={loading}
-              className={`px-6 py-2 bg-skin-secondary text-white rounded-full font-bold shadow-md hover:bg-skin-primary transition-colors ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={loading || wordCount > 200}
+              className={`px-6 py-2 bg-skin-secondary text-white rounded-full font-bold shadow-md hover:bg-skin-primary transition-colors ${loading || wordCount > 200 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {loading ? 'Posting...' : 'Post Story'}
             </button>

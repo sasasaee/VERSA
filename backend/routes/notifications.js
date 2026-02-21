@@ -3,9 +3,7 @@ const router = express.Router();
 const Notification = require('../models/Notification');
 const auth = require('../middleware/auth');
 
-// @route   GET /api/notifications
-// @desc    Get all notifications for current user
-// @access  Private
+
 router.get('/', auth, async (req, res) => {
   try {
     const notifications = await Notification.find({ recipient: req.user.id })
@@ -21,9 +19,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// @route   GET /api/notifications/unread-count
-// @desc    Get count of unread notifications
-// @access  Private
+
 router.get('/unread-count', auth, async (req, res) => {
   try {
     const count = await Notification.countDocuments({ 
@@ -38,9 +34,7 @@ router.get('/unread-count', auth, async (req, res) => {
   }
 });
 
-// @route   PUT /api/notifications/:id/read
-// @desc    Mark notification as read
-// @access  Private
+
 router.put('/:id/read', auth, async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -63,9 +57,7 @@ router.put('/:id/read', auth, async (req, res) => {
   }
 });
 
-// @route   PUT /api/notifications/mark-all-read
-// @desc    Mark all notifications as read
-// @access  Private
+
 router.put('/mark-all-read', auth, async (req, res) => {
   try {
     await Notification.updateMany(

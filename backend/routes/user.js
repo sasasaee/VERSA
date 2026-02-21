@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getUserProfile, updateUserProfile, uploadProfilePicture, getUserById } = require('../controllers/userController');
-const auth = require('../middleware/auth'); // You'll need an auth middleware
+const auth = require('../middleware/auth'); 
 const upload = require('../middleware/upload');
 
 // Get profile

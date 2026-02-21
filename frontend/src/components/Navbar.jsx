@@ -13,7 +13,7 @@ const Navbar = ({ activeTab, setActiveTab }) => {
   return (
     <div className="flex items-center justify-between mb-8 pl-32">
 
-      {/* 1. Toggle Switch */}
+      {/*Toggle Switch */}
       <div className="bg-skin-card rounded-full p-1 flex shadow-inner">
         <button
           onClick={() => setActiveTab('feed')}
@@ -29,11 +29,9 @@ const Navbar = ({ activeTab, setActiveTab }) => {
         </button>
       </div>
 
-      {/* 2. Right Side Controls */}
       <div className="flex items-center gap-4">
-        {/* Icon Box */}
         <div className="bg-skin-card rounded-xl p-2 flex gap-4 shadow-sm">
-          {/* REPLACED: Notification bell with dropdown component */}
+          {/*Notification bell with dropdown component */}
           <NotificationDropdown />
 
           <button

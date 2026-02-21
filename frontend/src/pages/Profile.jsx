@@ -47,20 +47,12 @@ const Profile = () => {
         if (tab === 'feed') navigate('/');
     };
 
-    useEffect(() => {
-        const init = async () => {
-            await fetchProfile();
-            await fetchUserStories();
-        };
-        init();
-    }, [id]);
-
     const fetchProfile = async () => {
         try {
             const token = getCleanToken();
             const endpoint = id
-                ? `http://localhost:5000/api/user/${id}`
-                : 'http://localhost:5000/api/user/profile';
+                ? `http://localhost:5000/api/user/${id}` //if there's an id view someone else's profile
+                : 'http://localhost:5000/api/user/profile'; //if no id, view own profile
 
             const res = await axios.get(endpoint, {
                 headers: { 'x-auth-token': token }
@@ -104,6 +96,13 @@ const Profile = () => {
             setStoriesLoading(false);
         }
     };
+    useEffect(() => {
+        const init = async () => {
+            await fetchProfile();
+            await fetchUserStories();
+        };
+        init();
+    }, [id]);
 
     const filteredStories = stories.filter(story => {
         const profileUserIdStr = String(id || currentUserId);
@@ -114,7 +113,7 @@ const Profile = () => {
         if (activeStoryTab === 'my-stories') {
             return isAuthor;
         } else {
-            // Contributions: user is in segments but is NOT the author
+            // user is in segments but is NOT the author
             return !isAuthor;
         }
     });
@@ -172,7 +171,7 @@ const Profile = () => {
             <Navbar activeTab="profile" setActiveTab={handleTabChange} />
 
             <div className="max-w-4xl mx-auto space-y-8 mt-10">
-                {/* 1. Profile Header Card */}
+                {/*Profile Header Card */}
                 <div className="bg-skin-card rounded-2xl p-8 shadow-lg border border-skin-muted/10 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-skin-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
 
@@ -208,7 +207,7 @@ const Profile = () => {
                                     </div>
 
                                     <p className="text-skin-text/70 italic text-lg max-w-lg leading-relaxed">
-                                        "{user.bio || "This writer is still crafting their story..."}"
+                                        "{user.bio || "Waiting for the first right line..."}"
                                     </p>
 
                                     <div className="flex flex-wrap justify-center md:justify-start gap-6 pt-2">
@@ -261,7 +260,7 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* 2. Stories Dashboard */}
+                {/* Stories Dashboard */}
                 <div className="space-y-6">
                     <div className="flex gap-8 border-b border-skin-muted/20 pb-1">
                         <button

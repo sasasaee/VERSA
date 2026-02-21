@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Define the two themes using CSS variables */
 :root {
   /* Default Theme */
   --bg-main: #F4F4F2;
@@ -17,11 +16,10 @@
   --petal-color-1: #A54F6B;
   --petal-color-2: #d26b8d;
   --placeholder: #666666;
-  /* Muted brown for warm gray look */
 }
 
 [data-theme='dark'] {
-  /* Joyful Medium Theme - Legible Typography */
+  /* Another Theme */
   --bg-main: #9F8383;
   --bg-secondary: #8B7272;
   --bg-card: #C8AAAA;
@@ -31,11 +29,9 @@
   --secondary: #574964;
   --accent: #574964;
   --text-on-primary: #FFF5F5;
-  /* Light color for visibility on dark background */
   --petal-color-1: #574964;
   --petal-color-2: #7a6b8a;
   --placeholder: #7a6b8a;
-  /* Soft light rose for dark mode */
 }
 
 /* Mapping to Tailwind classes */

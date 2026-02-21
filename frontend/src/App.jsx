@@ -5,7 +5,7 @@ import Register from './pages/Register';
 import ThemeLamp from './components/ThemeLamp';
 import Write from './pages/Write';
 import Profile from './pages/Profile';
-import About from './pages/About'; // ADD THIS
+import About from './pages/About';
 
 function App() {
   return (
@@ -19,7 +19,7 @@ function App() {
           <Route path="/write" element={<Write />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
-          <Route path="/about" element={<About />} /> {/* ADD THIS */}
+          <Route path="/about" element={<About />} /> 
         </Routes>
       </div>
     </BrowserRouter>
