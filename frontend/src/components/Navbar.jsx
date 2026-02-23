@@ -22,7 +22,7 @@ const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGe
             onClick={() => navigate('/')}
             className="text-2xl font-serif font-black text-skin-primary tracking-tighter hover:text-skin-secondary transition-colors"
           >
-            VERSA
+            ← VERSA
           </button>
         </div>
       ) : (

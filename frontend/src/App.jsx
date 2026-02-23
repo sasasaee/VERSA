@@ -6,6 +6,7 @@ import ThemeLamp from './components/ThemeLamp';
 import Write from './pages/Write';
 import Profile from './pages/Profile';
 import About from './pages/About';
+import ContestPage from './pages/ContestPage';
 
 function App() {
   return (
@@ -19,7 +20,8 @@ function App() {
           <Route path="/write" element={<Write />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
-          <Route path="/about" element={<About />} /> 
+          <Route path="/about" element={<About />} />
+          <Route path="/contest" element={<ContestPage />} />
         </Routes>
       </div>
     </BrowserRouter>
