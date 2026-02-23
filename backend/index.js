@@ -1,11 +1,12 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const storyRoutes = require('./routes/stories');
-const notificationRoutes = require('./routes/notifications'); // ADD THIS
+const notificationRoutes = require('./routes/notifications');
 const contestRoutes = require('./routes/contests');
-require('dotenv').config();
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;

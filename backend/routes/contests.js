@@ -18,7 +18,7 @@ router.get('/current', async (req, res) => {
     }
 });
 
-// Check if user has already submitted to a contest
+// Checks if user has already submitted to a contest
 router.get('/my-submission/:contestId', auth, async (req, res) => {
     try {
         const submission = await ContestSubmission.findOne({
@@ -66,6 +66,19 @@ router.post('/submit', auth, async (req, res) => {
 
         await submission.save();
         res.json(submission);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Get all submissions for a contest
+router.get('/:contestId/submissions', async (req, res) => {
+    try {
+        const submissions = await ContestSubmission.find({ contest: req.params.contestId })
+            .populate('user', 'username profilePicture')
+            .sort({ createdAt: -1 });
+        res.json(submissions);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

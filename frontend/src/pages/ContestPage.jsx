@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Toast from '../components/Toast';
+import SubmissionModal from '../components/SubmissionModal';
 
 const ContestPage = () => {
     const [contest, setContest] = useState(null);
@@ -9,6 +10,8 @@ const ContestPage = () => {
     const [loading, setLoading] = useState(true);
     const [content, setContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [submissions, setSubmissions] = useState([]);
+    const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [toast, setToast] = useState(null);
     const navigate = useNavigate();
 
@@ -33,6 +36,12 @@ const ContestPage = () => {
                     if (submissionRes.ok) {
                         const submissionData = await submissionRes.json();
                         setSubmission(submissionData);
+                    }
+
+                    const subsRes = await fetch(`http://localhost:5000/api/contests/${contestData._id}/submissions`);
+                    if (subsRes.ok) {
+                        const subsData = await subsRes.json();
+                        setSubmissions(subsData);
                     }
                 }
             } catch (err) {
@@ -65,6 +74,12 @@ const ContestPage = () => {
             if (res.ok) {
                 const data = await res.json();
                 setSubmission(data);
+                // Refresh submissions list to include the new one
+                const subsRes = await fetch(`http://localhost:5000/api/contests/${contest._id}/submissions`);
+                if (subsRes.ok) {
+                    const subsData = await subsRes.json();
+                    setSubmissions(subsData);
+                }
                 setToast({ message: 'Story submitted successfully! Good luck!', type: 'success' });
             } else {
                 const data = await res.json();
@@ -194,8 +209,8 @@ const ContestPage = () => {
                                     onClick={handleSubmit}
                                     disabled={submitting || !content.trim()}
                                     className={`px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl transition-all flex items-center gap-3 ${submitting || !content.trim()
-                                            ? 'bg-skin-muted/20 text-skin-muted cursor-not-allowed'
-                                            : 'bg-skin-primary text-white hover:brightness-110 hover:-translate-y-1'
+                                        ? 'bg-skin-muted/20 text-skin-muted cursor-not-allowed'
+                                        : 'bg-skin-primary text-white hover:brightness-110 hover:-translate-y-1'
                                         }`}
                                 >
                                     {submitting ? (
@@ -210,6 +225,65 @@ const ContestPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Submissions Gallery */}
+            <div className="mt-20">
+                <div className="flex items-center gap-4 mb-10">
+                    <div className="h-px flex-1 bg-skin-primary/10"></div>
+                    <h2 className="text-3xl font-serif font-bold text-skin-primary px-4">
+                        Community Submissions
+                    </h2>
+                    <div className="h-px flex-1 bg-skin-primary/10"></div>
+                </div>
+
+                {submissions.length === 0 ? (
+                    <div className="text-center py-20 bg-skin-card rounded-3xl border border-dashed border-skin-primary/20">
+                        <span className="text-4xl mb-4 block">✍️</span>
+                        <h3 className="text-xl font-serif font-bold text-skin-primary">No submissions yet</h3>
+                        <p className="text-skin-muted">Be the first to share your story!</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {submissions.map((sub) => (
+                            <div key={sub._id} className="bg-skin-card p-8 rounded-3xl border border-skin-primary/5 shadow-xl hover:translate-y-[-4px] transition-all group">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-skin-secondary/20 shadow-inner">
+                                        <img
+                                            src={sub.user?.profilePicture || 'https://via.placeholder.com/150'}
+                                            alt={sub.user?.username}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-skin-primary group-hover:text-skin-secondary transition-colors">
+                                            {sub.user?.username || 'Anonymous'}
+                                        </h4>
+                                        <p className="text-[10px] text-skin-muted font-black uppercase tracking-widest">
+                                            {new Date(sub.submittedAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p className="font-serif italic text-skin-text/80 leading-relaxed line-clamp-6">
+                                    "{sub.content}"
+                                </p>
+                                <button
+                                    className="mt-6 text-xs font-black text-skin-secondary uppercase tracking-[0.2em] flex items-center gap-2 hover:gap-3 transition-all"
+                                    onClick={() => setSelectedSubmission(sub)}
+                                >
+                                    Read Full Story →
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {selectedSubmission && (
+                <SubmissionModal
+                    submission={selectedSubmission}
+                    onClose={() => setSelectedSubmission(null)}
+                />
+            )}
 
             {toast && (
                 <Toast
