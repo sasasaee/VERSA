@@ -23,6 +23,12 @@ router.post('/', [auth, upload.single('headerImage')], async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ msg: 'User not found' });
 
+    // If user is a 'reader', upgrade to 'beginner' before saving story
+    if (user.rank === 'reader') {
+      user.rank = 'beginner';
+      await user.save();
+    }
+
     const newStory = new Story({
       title,
       genre: genre || 'General',
@@ -66,7 +72,7 @@ router.get('/search', async (req, res) => {
         { author: { $in: userIds } }
       ]
     })
-      .populate('author', 'username profilePicture')
+      .populate('author', 'username rank profilePicture')
       .sort({ createdAt: -1 });
 
     res.json(stories);
@@ -81,7 +87,7 @@ router.get('/', async (req, res) => {
   try {
     const stories = await Story.find()
       .sort({ createdAt: -1 })
-      .populate('author', 'username profilePicture');
+      .populate('author', 'username rank profilePicture');
     res.json(stories);
   } catch (err) {
     console.error(err.message);
@@ -126,8 +132,14 @@ router.post('/segment/:id', auth, async (req, res) => {
     const User = require('../models/User');
     const currentUser = await User.findById(req.user.id);
 
-    if (story.authorRank === 'master' && currentUser.rank === 'beginner') {
+    if (story.authorRank === 'master' && currentUser.rank !== 'master') {
       return res.status(403).json({ msg: 'Only Masters can continue this story.' });
+    }
+
+    // Update user rank from 'reader' to 'beginner' if needed
+    if (currentUser.rank === 'reader') {
+      currentUser.rank = 'beginner';
+      await currentUser.save();
     }
 
     const newSegment = {
@@ -151,8 +163,8 @@ router.post('/segment/:id', auth, async (req, res) => {
     }
 
     const updatedStory = await Story.findById(req.params.id)
-      .populate('segments.author', 'username profilePicture')
-      .populate('author', 'username profilePicture');
+      .populate('segments.author', 'username rank profilePicture')
+      .populate('author', 'username rank profilePicture');
 
     res.json(updatedStory);
 

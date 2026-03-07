@@ -89,7 +89,7 @@ exports.getSavedItems = async (req, res) => {
         const user = await User.findById(req.user.id)
             .populate({
                 path: 'savedStories',
-                populate: { path: 'author', select: 'username profilePicture' }
+                populate: { path: 'author', select: 'username rank profilePicture' }
             });
 
         if (!user) return res.status(404).json({ msg: 'User not found' });
@@ -97,7 +97,7 @@ exports.getSavedItems = async (req, res) => {
         // Fetch stories that contain any of the user's saved segments
         const storiesWithSavedSegments = await Story.find({
             'segments._id': { $in: user.savedSegments }
-        }).populate('author', 'username profilePicture');
+        }).populate('author', 'username rank profilePicture');
 
         const savedSegments = [];
         storiesWithSavedSegments.forEach(story => {
