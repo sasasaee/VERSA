@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const QuickWrite = ({ onStoryPosted }) => {
+const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
   const [expanded, setExpanded] = useState(false);
   const [formData, setFormData] = useState({ title: '', content: '', genre: 'General' });
   const [imageFile, setImageFile] = useState(null);
@@ -51,8 +51,13 @@ const QuickWrite = ({ onStoryPosted }) => {
       });
 
       if (res.ok) {
-        const newStory = await res.json();
-        onStoryPosted(newStory); // Update feed instantly
+        const responseData = await res.json();
+        onStoryPosted(responseData); // Update feed instantly
+
+        if (responseData.rankUpgraded && onRankUpgrade) {
+          onRankUpgrade();
+        }
+
         setFormData({ title: '', content: '', genre: 'General' }); // Reset
         setImageFile(null);
         setPreview(null);

@@ -5,6 +5,7 @@ import ContestSidebar from '../components/ContestSidebar';
 import QuickWrite from '../components/QuickWrite';
 import StoryModal from '../components/StoryModal';
 import Toast from '../components/Toast';
+import RankUpgradeModal from '../components/RankUpgradeModal';
 
 // Get current user ID to check if we liked the story
 const getUserIdFromToken = (token) => {
@@ -36,6 +37,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [filterGenre, setFilterGenre] = useState('All Genres');
+  const [showRankUpgrade, setShowRankUpgrade] = useState(false);
 
   // Get token and User ID immediately
   const token = localStorage.getItem('token');
@@ -297,7 +299,10 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* LEFT COLUMN: Feed */}
         <div className="lg:col-span-3">
-          <QuickWrite onStoryPosted={handleNewStory} />
+          <QuickWrite
+            onStoryPosted={handleNewStory}
+            onRankUpgrade={() => setShowRankUpgrade(true)}
+          />
 
           <div className="space-y-8">
             {isSearching && (
@@ -422,7 +427,7 @@ const Dashboard = () => {
                                 {userSavedStories.some(id => String(id) === String(story._id)) ? 'Unsave Story' : 'Save Story'}
                               </button>
 
-                              {String(story.author?._id) === String(currentUserId) && (
+                              {String(story.author?._id || story.author) === String(currentUserId) && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -552,7 +557,13 @@ const Dashboard = () => {
         <StoryModal
           storyId={selectedStoryId}
           onClose={() => setSelectedStoryId(null)}
+          onRankUpgrade={() => setShowRankUpgrade(true)}
         />
+      )}
+
+      {/* Rank Upgrade Modal */}
+      {showRankUpgrade && (
+        <RankUpgradeModal onClose={() => setShowRankUpgrade(false)} />
       )}
 
       {/* Toast Notification */}
