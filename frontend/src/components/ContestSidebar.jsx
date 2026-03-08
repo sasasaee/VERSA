@@ -36,7 +36,10 @@ const ContestSidebar = () => {
 
   if (!contest) return null;
 
-  const isExpired = new Date() > new Date(contest.deadline);
+  const now = new Date();
+  const isExpired = now > new Date(contest.deadline);
+  const isVotingPeriod = isExpired && now < new Date(contest.votingDeadline);
+  const votingEnded = now > new Date(contest.votingDeadline);
 
   return (
     <div className="hidden lg:block w-full sticky top-24 h-fit">
@@ -52,17 +55,18 @@ const ContestSidebar = () => {
         </p>
         <div className="flex flex-col gap-1 mb-4">
           <div className="text-[10px] font-black text-skin-muted uppercase tracking-[0.2em]">
-            Deadline
+            {isVotingPeriod ? 'Voting Ends' : (votingEnded ? 'Contest Ended' : 'Deadline')}
           </div>
-          <div className={`text-xs font-bold ${isExpired ? 'text-red-500' : 'text-skin-primary'}`}>
-            {new Date(contest.deadline).toLocaleDateString()} at {new Date(contest.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <div className={`text-xs font-bold ${votingEnded ? 'text-red-500' : isVotingPeriod ? 'text-amber-500' : 'text-skin-primary'}`}>
+            {new Date(isExpired ? contest.votingDeadline : contest.deadline).toLocaleDateString()} at {new Date(isExpired ? contest.votingDeadline : contest.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
         <button
           onClick={() => navigate('/contest')}
-          className="w-full py-3 bg-skin-secondary hover:brightness-110 text-white font-bold rounded-xl transition-all shadow-md text-sm uppercase tracking-wider"
+          className={`w-full py-3 font-bold rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${isVotingPeriod ? 'bg-amber-500 text-white hover:brightness-110' : 'bg-skin-secondary text-white hover:brightness-110'
+            }`}
         >
-          {isExpired ? 'View Contest' : 'Participate Now'}
+          {isVotingPeriod ? 'Vote Now' : (votingEnded ? 'View Results' : 'Participate Now')}
         </button>
       </div>
     </div>

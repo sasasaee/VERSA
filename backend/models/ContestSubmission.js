@@ -4,6 +4,7 @@ const contestSubmissionSchema = new mongoose.Schema({
     contest: { type: mongoose.Schema.Types.ObjectId, ref: 'Contest', required: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     content: { type: String, required: true },
+    votes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     submittedAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 

@@ -85,4 +85,44 @@ router.get('/:contestId/submissions', async (req, res) => {
     }
 });
 
+// Vote for a story
+router.post('/vote/:submissionId', auth, async (req, res) => {
+    try {
+        const submission = await ContestSubmission.findById(req.params.submissionId).populate('contest');
+        if (!submission) {
+            return res.status(404).json({ msg: 'Submission not found' });
+        }
+
+        const now = new Date();
+        const contest = submission.contest;
+
+        // Check if contest is in voting period
+        if (now < new Date(contest.deadline)) {
+            return res.status(400).json({ msg: 'Voting has not started yet' });
+        }
+        if (now > new Date(contest.votingDeadline)) {
+            return res.status(400).json({ msg: 'Voting has ended' });
+        }
+
+        // User cannot vote for their own story
+        if (submission.user.toString() === req.user.id) {
+            return res.status(400).json({ msg: 'You cannot vote for your own story' });
+        }
+
+        // Toggle vote
+        const voteIndex = submission.votes.indexOf(req.user.id);
+        if (voteIndex === -1) {
+            submission.votes.push(req.user.id);
+        } else {
+            submission.votes.splice(voteIndex, 1);
+        }
+
+        await submission.save();
+        res.json({ votes: submission.votes, hasVoted: voteIndex === -1 });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;

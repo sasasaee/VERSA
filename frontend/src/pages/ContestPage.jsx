@@ -13,6 +13,7 @@ const ContestPage = () => {
     const [submissions, setSubmissions] = useState([]);
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [toast, setToast] = useState(null);
+    const [votingInProgress, setVotingInProgress] = useState(null);
     const navigate = useNavigate();
 
     const token = localStorage.getItem('token')?.replace(/^"|"$/g, '');
@@ -93,6 +94,40 @@ const ContestPage = () => {
         }
     };
 
+    const handleVote = async (submissionId) => {
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        setVotingInProgress(submissionId);
+        try {
+            const res = await fetch(`http://localhost:5000/api/contests/vote/${submissionId}`, {
+                method: 'POST',
+                headers: {
+                    'x-auth-token': token
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                // Update submissions list with new vote count/status
+                setSubmissions(prev => prev.map(sub =>
+                    sub._id === submissionId ? { ...sub, votes: data.votes } : sub
+                ));
+                setToast({ message: data.hasVoted ? 'Vote added!' : 'Vote removed!', type: 'success' });
+            } else {
+                const data = await res.json();
+                setToast({ message: data.msg || 'Voting failed', type: 'error' });
+            }
+        } catch (err) {
+            console.error("Voting error:", err);
+            setToast({ message: 'Error processing vote', type: 'error' });
+        } finally {
+            setVotingInProgress(null);
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-skin-base">
             <div className="animate-spin w-12 h-12 border-4 border-skin-primary border-t-transparent rounded-full"></div>
@@ -106,7 +141,12 @@ const ContestPage = () => {
         </div>
     );
 
-    const isExpired = new Date() > new Date(contest.deadline);
+    const now = new Date();
+    const isExpired = now > new Date(contest.deadline);
+    const isVotingPeriod = isExpired && now < new Date(contest.votingDeadline);
+    const votingEnded = now > new Date(contest.votingDeadline);
+
+    const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
 
     return (
         <div className="min-h-screen bg-skin-base pt-10 px-4 max-w-5xl mx-auto pb-20">
@@ -127,9 +167,14 @@ const ContestPage = () => {
                                 <span className="bg-skin-secondary/20 text-skin-secondary text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full">
                                     Weekly Contest
                                 </span>
-                                {isExpired && (
+                                {votingEnded && (
                                     <span className="bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full">
-                                        Contest Ended
+                                        Contest Closed
+                                    </span>
+                                )}
+                                {!votingEnded && isExpired && (
+                                    <span className="bg-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full">
+                                        Voting Phase
                                     </span>
                                 )}
                             </div>
@@ -140,13 +185,13 @@ const ContestPage = () => {
 
                         <div className="bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-white/50 shadow-sm min-w-[200px]">
                             <div className="text-[10px] font-black text-skin-muted uppercase tracking-[0.2em] mb-1">
-                                Deadline
+                                {isExpired ? 'Voting Ends' : 'Deadline'}
                             </div>
-                            <div className={`text-lg font-bold ${isExpired ? 'text-red-500' : 'text-skin-primary'}`}>
-                                {new Date(contest.deadline).toLocaleDateString()}
+                            <div className={`text-lg font-bold ${votingEnded ? 'text-red-500' : isVotingPeriod ? 'text-amber-500' : 'text-skin-primary'}`}>
+                                {new Date(isExpired ? contest.votingDeadline : contest.deadline).toLocaleDateString()}
                             </div>
                             <div className="text-xs text-skin-muted font-medium">
-                                at {new Date(contest.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                at {new Date(isExpired ? contest.votingDeadline : contest.deadline).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                         </div>
                     </div>
@@ -266,12 +311,34 @@ const ContestPage = () => {
                                 <p className="font-serif italic text-skin-text/80 leading-relaxed line-clamp-6">
                                     "{sub.content}"
                                 </p>
-                                <button
-                                    className="mt-6 text-xs font-black text-skin-secondary uppercase tracking-[0.2em] flex items-center gap-2 hover:gap-3 transition-all"
-                                    onClick={() => setSelectedSubmission(sub)}
-                                >
-                                    Read Full Story →
-                                </button>
+                                <div className="mt-6 flex items-center justify-between">
+                                    <button
+                                        className="text-xs font-black text-skin-secondary uppercase tracking-[0.2em] flex items-center gap-2 hover:gap-3 transition-all"
+                                        onClick={() => setSelectedSubmission(sub)}
+                                    >
+                                        Read Full Story →
+                                    </button>
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1.5 text-skin-muted">
+                                            <span className="text-sm">⭐</span>
+                                            <span className="text-xs font-bold">{sub.votes?.length || 0}</span>
+                                        </div>
+
+                                        {isVotingPeriod && sub.user?._id !== userId && (
+                                            <button
+                                                onClick={() => handleVote(sub._id)}
+                                                disabled={votingInProgress === sub._id}
+                                                className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sub.votes?.includes(userId)
+                                                        ? 'bg-skin-primary text-white'
+                                                        : 'border-2 border-skin-primary/20 text-skin-primary hover:bg-skin-primary/5'
+                                                    }`}
+                                            >
+                                                {votingInProgress === sub._id ? '...' : (sub.votes?.includes(userId) ? 'Voted' : 'Vote')}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>

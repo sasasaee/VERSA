@@ -9,11 +9,15 @@ mongoose.connect(process.env.MONGO_URI)
         // Set all previous contests to inactive
         await Contest.updateMany({}, { active: false });
 
-        // Create an expired contest
+        // Create a contest that is currently in the voting period
+        const deadline = new Date(Date.now() - 3600000); // 1 hour ago
+        const votingDeadline = new Date(deadline.getTime() + 24 * 60 * 60 * 1000); // Ends 23h from now
+
         const contest = new Contest({
-            title: 'The Silent Library (Expired Test)',
+            title: 'The Silent Library (Voting Test)',
             description: 'You enter a library where every book is blank, until you touch it...',
-            deadline: new Date(Date.now() - 3600000), // 1 hour ago
+            deadline: deadline,
+            votingDeadline: votingDeadline,
             active: true
         });
 
