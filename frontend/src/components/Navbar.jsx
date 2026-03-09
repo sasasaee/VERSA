@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NotificationDropdown from './NotificationDropdown';
 import SearchBar from './SearchBar';
@@ -6,7 +6,30 @@ import SortDropdown from './SortDropdown';
 
 const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGenre, setFilterGenre, isProfile = false }) => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const genres = ['All Genres', 'General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller'];
+
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/user/profile', {
+          headers: { 'x-auth-token': token.replace(/^"|"$/g, '') }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+        }
+      } catch (err) {
+        console.error("Error fetching navbar user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -76,7 +99,17 @@ const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGe
           </button>
 
           {!isProfile && (
-            <button onClick={() => navigate('/profile')} className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary" title="Profile">👤</button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="w-8 h-8 rounded-full bg-skin-base border-2 border-skin-primary/10 hover:border-skin-primary/40 flex items-center justify-center text-skin-primary overflow-hidden transition-all"
+              title="Profile"
+            >
+              {user?.profilePicture ? (
+                <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-bold">{user?.username?.[0]?.toUpperCase() || '👤'}</span>
+              )}
+            </button>
           )}
         </div>
 
@@ -94,3 +127,4 @@ const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGe
 };
 
 export default Navbar;
+

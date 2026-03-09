@@ -169,25 +169,40 @@ router.get('/leaderboard', async (req, res) => {
         const User = require('../models/User');
         const Story = require('../models/Story');
 
-        const allUsers = await User.find({}, 'username');
+        // Aggregate Story upvotes per author
+        const storyUpvotes = await Story.aggregate([
+            { $project: { author: 1, upvotesCount: { $size: { $ifNull: ["$upvotes", []] } } } },
+            { $group: { _id: "$author", total: { $sum: "$upvotesCount" } } }
+        ]);
+
+        // Aggregate ContestSubmission upvotes per user
+        const submissionUpvotes = await ContestSubmission.aggregate([
+            { $project: { user: 1, upvotesCount: { $size: { $ifNull: ["$votes", []] } } } },
+            { $group: { _id: "$user", total: { $sum: "$upvotesCount" } } }
+        ]);
+
+        // Combine platform stats
+        const totals = {};
+        storyUpvotes.forEach(item => {
+            if (item._id) {
+                const uid = item._id.toString();
+                totals[uid] = (totals[uid] || 0) + item.total;
+            }
+        });
+        submissionUpvotes.forEach(item => {
+            if (item._id) {
+                const uid = item._id.toString();
+                totals[uid] = (totals[uid] || 0) + item.total;
+            }
+        });
+
         let maxPlatformUpvotes = -1;
         let bonusUserId = null;
 
-        const platformStats = await Promise.all(allUsers.map(async (u) => {
-            const stories = await Story.find({ author: u._id });
-            const subs = await ContestSubmission.find({ user: u._id });
-
-            const totalStoryUpvotes = stories.reduce((sum, s) => sum + (s.upvotes?.length || 0), 0);
-            const totalSubUpvotes = subs.reduce((sum, s) => sum + (s.votes?.length || 0), 0);
-
-            const total = totalStoryUpvotes + totalSubUpvotes;
-            return { userId: u._id.toString(), total };
-        }));
-
-        platformStats.forEach(p => {
-            if (p.total > maxPlatformUpvotes && p.total > 0) {
-                maxPlatformUpvotes = p.total;
-                bonusUserId = p.userId;
+        Object.entries(totals).forEach(([uid, total]) => {
+            if (total > maxPlatformUpvotes && total > 0) {
+                maxPlatformUpvotes = total;
+                bonusUserId = uid;
             }
         });
 
