@@ -7,6 +7,7 @@ import Write from './pages/Write';
 import Profile from './pages/Profile';
 import About from './pages/About';
 import ContestPage from './pages/ContestPage';
+import Leaderboard from './pages/Leaderboard';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/about" element={<About />} />
           <Route path="/contest" element={<ContestPage />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
         </Routes>
       </div>
     </BrowserRouter>

@@ -30,31 +30,35 @@ const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGe
           {/*Toggle Switch */}
           <div className="bg-skin-card rounded-full p-1 flex shadow-inner shrink-0">
             <button
-              onClick={() => setActiveTab('feed')}
-              className={`px-6 py-2 rounded-full font-bold transition-all ${activeTab === 'feed' ? 'bg-skin-secondary text-white shadow-md' : 'text-skin-muted hover:text-skin-primary'}`}
+              onClick={() => navigate('/')}
+              className={`px-6 py-2 rounded-full font-bold transition-all ${window.location.pathname === '/' ? 'bg-skin-secondary text-white shadow-md' : 'text-skin-muted hover:text-skin-primary'}`}
             >
               Feed
             </button>
             <button
-              onClick={() => setActiveTab('leaderboard')}
-              className={`px-6 py-2 rounded-full font-bold transition-all ${activeTab === 'leaderboard' ? 'bg-skin-secondary text-white shadow-md' : 'text-skin-muted hover:text-skin-primary'}`}
+              onClick={() => navigate('/leaderboard')}
+              className={`px-6 py-2 rounded-full font-bold transition-all ${window.location.pathname === '/leaderboard' ? 'bg-skin-secondary text-white shadow-md' : 'text-skin-muted hover:text-skin-primary'}`}
             >
               Leaderboard
             </button>
           </div>
 
           {/* Search Bar */}
-          <div className="w-[450px] hidden lg:block">
-            <SearchBar onSearch={onSearch} />
-          </div>
+          {onSearch && (
+            <div className="w-[450px] hidden lg:block">
+              <SearchBar onSearch={onSearch} />
+            </div>
+          )}
 
           {/* Unified Nested Sort Dropdown */}
-          <SortDropdown
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            filterGenre={filterGenre}
-            setFilterGenre={setFilterGenre}
-          />
+          {sortBy && setSortBy && (
+            <SortDropdown
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              filterGenre={filterGenre}
+              setFilterGenre={setFilterGenre}
+            />
+          )}
         </div>
       )}
 

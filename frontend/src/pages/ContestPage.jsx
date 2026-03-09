@@ -216,8 +216,11 @@ const ContestPage = () => {
                                 {submission.content}
                             </div>
                             <div className="mt-8">
-                                <button onClick={() => navigate('/')} className="px-8 py-3 bg-skin-secondary text-white rounded-xl font-bold shadow-lg hover:brightness-110 transition-all">
-                                    Discover More Stories
+                                <button
+                                    onClick={() => votingEnded ? navigate('/leaderboard') : navigate('/')}
+                                    className="px-8 py-3 bg-skin-secondary text-white rounded-xl font-bold shadow-lg hover:brightness-110 transition-all"
+                                >
+                                    {votingEnded ? 'View Contest Results →' : 'Discover More Stories'}
                                 </button>
                             </div>
                         </div>
@@ -226,10 +229,13 @@ const ContestPage = () => {
                             <span className="text-5xl mb-6 block">⌛</span>
                             <h2 className="text-2xl font-serif font-bold text-red-500 mb-2">Contest Ended</h2>
                             <p className="text-skin-muted mb-8 max-w-md mx-auto">
-                                The deadline for this contest has passed. Stay tuned for the next weekly prompt!
+                                The deadline for this contest has passed. {votingEnded ? 'Check the final results on the leaderboard!' : 'Stay tuned for the next weekly prompt!'}
                             </p>
-                            <button onClick={() => navigate('/')} className="px-8 py-3 bg-skin-base border border-red-500/20 text-red-500 rounded-xl font-bold hover:bg-red-500/5 transition-all">
-                                Back to Dashboard
+                            <button
+                                onClick={() => votingEnded ? navigate('/leaderboard') : navigate('/')}
+                                className="px-8 py-3 bg-skin-base border border-red-500/20 text-red-500 rounded-xl font-bold hover:bg-red-500/5 transition-all"
+                            >
+                                {votingEnded ? 'View Results (Leaderboard)' : 'Back to Dashboard'}
                             </button>
                         </div>
                     ) : (
@@ -330,8 +336,8 @@ const ContestPage = () => {
                                                 onClick={() => handleVote(sub._id)}
                                                 disabled={votingInProgress === sub._id}
                                                 className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sub.votes?.includes(userId)
-                                                        ? 'bg-skin-primary text-white'
-                                                        : 'border-2 border-skin-primary/20 text-skin-primary hover:bg-skin-primary/5'
+                                                    ? 'bg-skin-primary text-white'
+                                                    : 'border-2 border-skin-primary/20 text-skin-primary hover:bg-skin-primary/5'
                                                     }`}
                                             >
                                                 {votingInProgress === sub._id ? '...' : (sub.votes?.includes(userId) ? 'Voted' : 'Vote')}

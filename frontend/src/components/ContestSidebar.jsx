@@ -62,7 +62,7 @@ const ContestSidebar = () => {
           </div>
         </div>
         <button
-          onClick={() => navigate('/contest')}
+          onClick={() => votingEnded ? navigate('/leaderboard') : navigate('/contest')}
           className={`w-full py-3 font-bold rounded-xl transition-all shadow-md text-sm uppercase tracking-wider ${isVotingPeriod ? 'bg-amber-500 text-white hover:brightness-110' : 'bg-skin-secondary text-white hover:brightness-110'
             }`}
         >
