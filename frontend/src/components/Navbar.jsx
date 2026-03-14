@@ -92,22 +92,26 @@ const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGe
 
           <button
             onClick={() => navigate('/about')}
-            className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-primary cursor-pointer"
+            className="w-8 h-8 rounded-full bg-skin-base hover:bg-skin-primary/20 flex items-center justify-center text-skin-text cursor-pointer transition-all focus:outline-none"
             title="About Us"
           >
-            ℹ️
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
           </button>
 
           {!isProfile && (
             <button
               onClick={() => navigate('/profile')}
-              className="w-8 h-8 rounded-full bg-skin-base border-2 border-skin-primary/10 hover:border-skin-primary/40 flex items-center justify-center text-skin-primary overflow-hidden transition-all"
+              className="w-8 h-8 rounded-full bg-skin-base border-2 border-skin-primary/10 hover:border-skin-primary/40 flex items-center justify-center text-skin-text overflow-hidden transition-all"
               title="Profile"
             >
               {user?.profilePicture ? (
                 <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <span className="font-bold">{user?.username?.[0]?.toUpperCase() || '👤'}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
               )}
             </button>
           )}
@@ -116,7 +120,7 @@ const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGe
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center font-bold px-4 py-2 rounded-xl transition-all text-xs uppercase tracking-widest text-red-500 hover:bg-red-500/10 border border-red-500/20"
+          className="flex items-center justify-center font-bold px-4 h-[48px] rounded-xl transition-all text-xs uppercase tracking-widest text-red-500 hover:bg-red-500/10 border border-red-500/20"
           title="Logout"
         >
           Logout

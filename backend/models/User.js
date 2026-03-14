@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema({
   },
   rank: {
     type: String,
-    enum: ['reader', 'beginner', 'master'],
+    enum: ['reader', 'beginner', 'author', 'master'],
     default: 'reader'
   },
   bio: {
@@ -37,6 +37,14 @@ const UserSchema = new mongoose.Schema({
   savedSegments: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Story'
+  }],
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }],
   createdAt: {
     type: Date,

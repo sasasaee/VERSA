@@ -29,6 +29,16 @@ const Profile = () => {
     const [savedStoriesData, setSavedStoriesData] = useState([]);
     const [savedSegmentsData, setSavedSegmentsData] = useState([]);
 
+    // Follower State
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followersCount, setFollowersCount] = useState(0);
+    const [followingCount, setFollowingCount] = useState(0);
+    const [followLoading, setFollowLoading] = useState(false);
+    const [showFollowersModal, setShowFollowersModal] = useState(false);
+    const [showFollowingModal, setShowFollowingModal] = useState(false);
+    const [followersList, setFollowersList] = useState([]);
+    const [followingList, setFollowingList] = useState([]);
+
     const { id } = useParams(); // Get ID from URL
     const navigate = useNavigate();
 
@@ -45,7 +55,7 @@ const Profile = () => {
         if (!token) return null;
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.userId;
+            return payload.userId || payload.id;
         } catch (e) {
             console.error("Token parse error:", e);
             return null;
@@ -80,6 +90,13 @@ const Profile = () => {
             });
             setUser(res.data);
             setUserSavedStories(res.data.savedStories || []);
+            
+            setFollowersCount(res.data.followers?.length || 0);
+            setFollowingCount(res.data.following?.length || 0);
+            
+            if (id && currentUserId) {
+                setIsFollowing(res.data.followers?.some(fid => fid.toString() === currentUserId.toString()));
+            }
 
             if (!id) {
                 setFormData({
@@ -94,6 +111,62 @@ const Profile = () => {
             setLoading(false);
         }
     };
+
+    const handleFollow = async () => {
+        const token = getCleanToken();
+        if (!token) return navigate('/login');
+        if (!id) return;
+
+        setFollowLoading(true);
+        try {
+            const res = await axios.post(`http://localhost:5000/api/follow/${id}`, {}, {
+                headers: { 'x-auth-token': token }
+            });
+            setIsFollowing(res.data.isFollowing);
+            setFollowersCount(res.data.followersCount);
+            setToast({
+                message: res.data.isFollowing ? `You are now following ${user.username}` : `Unfollowed ${user.username}`,
+                type: 'success'
+            });
+        } catch (err) {
+            console.error("Follow error:", err);
+            setToast({ message: 'Error updating follow status', type: 'error' });
+        } finally {
+            setFollowLoading(false);
+        }
+    };
+
+    const fetchFollowers = async () => {
+        try {
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/follow/followers/${id || currentUserId}`, {
+                headers: { 'x-auth-token': token }
+            });
+            setFollowersList(res.data);
+        } catch (err) {
+            console.error("Error fetching followers:", err);
+        }
+    };
+
+    const fetchFollowing = async () => {
+        try {
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/follow/following/${id || currentUserId}`, {
+                headers: { 'x-auth-token': token }
+            });
+            setFollowingList(res.data);
+        } catch (err) {
+            console.error("Error fetching following:", err);
+        }
+    };
+
+    useEffect(() => {
+        if (showFollowersModal) fetchFollowers();
+    }, [showFollowersModal]);
+
+    useEffect(() => {
+        if (showFollowingModal) fetchFollowing();
+    }, [showFollowingModal]);
 
     const fetchUserStories = async () => {
         try {
@@ -330,20 +403,64 @@ const Profile = () => {
                                                 </p>
                                                 <p className="text-xs text-skin-muted uppercase tracking-tighter">Stories</p>
                                             </div>
+                                            <div 
+                                                className="text-center border-r border-skin-muted/20 pr-6 cursor-pointer hover:opacity-70 transition-opacity"
+                                                onClick={() => setShowFollowersModal(true)}
+                                            >
+                                                <p className="text-2xl font-bold text-skin-primary">{followersCount}</p>
+                                                <p className="text-xs text-skin-muted uppercase tracking-tighter">Followers</p>
+                                            </div>
+                                            <div 
+                                                className="text-center border-r border-skin-muted/20 pr-6 cursor-pointer hover:opacity-70 transition-opacity"
+                                                onClick={() => setShowFollowingModal(true)}
+                                            >
+                                                <p className="text-2xl font-bold text-skin-primary">{followingCount}</p>
+                                                <p className="text-xs text-skin-muted uppercase tracking-tighter">Following</p>
+                                            </div>
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-skin-primary">{user.createdAt ? new Date(user.createdAt).getFullYear() : '2024'}</p>
                                                 <p className="text-xs text-skin-muted uppercase tracking-tighter">Joined</p>
                                             </div>
                                         </div>
 
-                                        {!id && (
-                                            <button
-                                                onClick={() => setIsEditing(true)}
-                                                className="mt-6 bg-skin-primary text-skin-on-primary px-8 py-2.5 rounded-full hover:brightness-110 transition-all font-bold shadow-md active:scale-95"
-                                            >
-                                                Edit Profile
-                                            </button>
-                                        )}
+                                        <div className="flex gap-3 mt-6">
+                                            {!id ? (
+                                                <button
+                                                    onClick={() => setIsEditing(true)}
+                                                    className="bg-skin-primary text-skin-on-primary px-8 py-2.5 rounded-full hover:brightness-110 transition-all font-bold shadow-md active:scale-95"
+                                                >
+                                                    Edit Profile
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={handleFollow}
+                                                    disabled={followLoading}
+                                                    className={`px-8 py-2.5 rounded-full font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 ${
+                                                        isFollowing 
+                                                        ? 'bg-skin-muted/20 text-skin-text hover:bg-red-500/10 hover:text-red-500 border border-skin-muted/30' 
+                                                        : 'bg-skin-primary text-skin-on-primary hover:brightness-110'
+                                                    }`}
+                                                >
+                                                    {followLoading ? (
+                                                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                                    ) : isFollowing ? (
+                                                        <>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                                                <path fillRule="evenodd" d="M19.91 4.146a.75.75 0 01.09 1.053l-9 10a.75.75 0 01-1.082.028l-4-4a.75.75 0 011.06-1.06l3.435 3.434 8.444-9.382a.75.75 0 011.053-.09z" clipRule="evenodd" />
+                                                            </svg>
+                                                            Following
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                                                <path fillRule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clipRule="evenodd" />
+                                                            </svg>
+                                                            Follow
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
                                     </>
                                 ) : (
                                     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-md mx-auto md:mx-0">
@@ -549,6 +666,20 @@ const Profile = () => {
                     />
                 )}
 
+                {/* Followers/Following Modals */}
+                <FollowListModal 
+                    isOpen={showFollowersModal}
+                    onClose={() => setShowFollowersModal(false)}
+                    title="Followers"
+                    users={followersList}
+                />
+                <FollowListModal 
+                    isOpen={showFollowingModal}
+                    onClose={() => setShowFollowingModal(false)}
+                    title="Following"
+                    users={followingList}
+                />
+
                 {/* Toast Notification */}
                 {toast && (
                     <Toast
@@ -557,6 +688,67 @@ const Profile = () => {
                         onClose={() => setToast(null)}
                     />
                 )}
+            </div>
+        </div>
+    );
+};
+
+const FollowListModal = ({ isOpen, onClose, title, users }) => {
+    const navigate = useNavigate();
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+            <div 
+                className="bg-skin-card w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-modal-pop"
+                onClick={e => e.stopPropagation()}
+            >
+                <div className="px-6 py-4 border-b border-skin-muted/10 flex justify-between items-center bg-skin-primary/5">
+                    <h3 className="text-xl font-serif font-bold text-skin-primary">{title}</h3>
+                    <button onClick={onClose} className="p-2 hover:bg-skin-primary/10 rounded-full transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div className="max-h-[60vh] overflow-y-auto p-4 space-y-2">
+                    {users.length === 0 ? (
+                        <div className="py-10 text-center text-skin-muted italic font-serif">
+                            No users found.
+                        </div>
+                    ) : (
+                        users.map(user => (
+                            <div 
+                                key={user._id} 
+                                className="flex items-center gap-4 p-3 rounded-2xl hover:bg-skin-primary/5 transition-all cursor-pointer group"
+                                onClick={() => {
+                                    onClose();
+                                    navigate(`/profile/${user._id}`);
+                                }}
+                            >
+                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-skin-primary/10 group-hover:border-skin-primary/30 transition-colors">
+                                    {user.profilePicture ? (
+                                        <img src={user.profilePicture} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-skin-muted/10 text-skin-primary font-bold">
+                                            {user.username[0].toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <p className="font-bold text-skin-text group-hover:text-skin-primary transition-colors">{user.username}</p>
+                                    <span className="text-[10px] uppercase tracking-widest font-bold text-skin-muted">{user.rank || 'beginner'}</span>
+                                </div>
+                                <div className="text-skin-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
             </div>
         </div>
     );

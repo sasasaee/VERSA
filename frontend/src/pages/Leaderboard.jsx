@@ -2,10 +2,35 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import axios from 'axios';
+import Confetti from 'react-confetti';
+
+// Simple hook so we don't need to install react-use
+function useWindowDimensions() {
+    const [windowDimensions, setWindowDimensions] = useState({
+        width: typeof window !== "undefined" ? window.innerWidth : 0,
+        height: typeof window !== "undefined" ? window.innerHeight : 0,
+    });
+
+    useEffect(() => {
+        function handleResize() {
+            setWindowDimensions({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        }
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    return windowDimensions;
+}
 
 const Leaderboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [upgradeMessage, setUpgradeMessage] = useState('');
+    const { width, height } = useWindowDimensions();
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
 
@@ -15,7 +40,23 @@ const Leaderboard = () => {
             return;
         }
         fetchLeaderboard();
+        checkStreak();
     }, [navigate, token]);
+
+    const checkStreak = async () => {
+        try {
+            const cleanToken = token.replace(/^"|"$/g, '');
+            const res = await axios.get(`http://localhost:5000/api/contests/check-streak`, {
+                headers: { 'x-auth-token': cleanToken }
+            });
+            if (res.data.upgraded) {
+                setUpgradeMessage(res.data.newRank);
+                setShowConfetti(true);
+            }
+        } catch (err) {
+            console.error('Error checking streak:', err);
+        }
+    };
 
     const fetchLeaderboard = async () => {
         setLoading(true);
@@ -33,7 +74,37 @@ const Leaderboard = () => {
     };
 
     return (
-        <div className="min-h-screen pt-10 px-4 max-w-7xl mx-auto pb-20">
+        <div className="min-h-screen pt-10 px-4 max-w-7xl mx-auto pb-20 relative">
+            {showConfetti && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+                    <Confetti
+                        width={width}
+                        height={height}
+                        recycle={false}
+                        numberOfPieces={800}
+                        gravity={0.15}
+                    />
+
+                    <div className="bg-skin-card p-10 rounded-3xl shadow-2xl border-4 border-[#FFD700] max-w-lg mx-auto text-center transform animate-modal-pop pointer-events-auto relative overflow-hidden backdrop-blur-md">
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-[#FFD700]/20 to-transparent pointer-events-none"></div>
+
+                        <div className="text-6xl mb-6 relative z-10 animate-bounce">🎊</div>
+                        <h2 className="text-3xl font-serif font-black text-skin-text mb-4 relative z-10">Legendary Streak!</h2>
+                        <p className="text-lg text-skin-muted mb-8 relative z-10">
+                            You placed 1st in 3 consecutive contests!<br />
+                            As a reward for your incredible storytelling, your title has officially been upgraded to <span className="font-black text-[#FFD700] uppercase tracking-wider glow-text">Author</span>!
+                        </p>
+                        <button
+                            onClick={() => setShowConfetti(false)}
+                            className="px-8 py-3 bg-skin-secondary text-white font-bold rounded-full shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all uppercase tracking-widest text-sm relative z-10"
+                        >
+                            Claim Title
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <Navbar />
 
             <div className="pt-12">
@@ -59,19 +130,18 @@ const Leaderboard = () => {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-skin-primary/5">
-                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted">Rank</th>
-                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted">User</th>
-                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted">Story Segment</th>
-                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted text-center">Contest Upvotes</th>
-                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted text-center">Bonus</th>
-                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted text-right">Final Score</th>
+                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted">Global Rank</th>
+                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted">User & Title</th>
+                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted text-center">Contest Points</th>
+                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted text-center">Story Points</th>
+                                        <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted text-right">Global Influence</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-skin-primary/5">
                                     {leaderboard.length === 0 ? (
                                         <tr>
-                                            <td colSpan="6" className="px-10 py-32 text-center text-skin-muted italic font-serif text-xl opacity-60">
-                                                No rankings recorded for the current contest.
+                                            <td colSpan="5" className="px-10 py-32 text-center text-skin-muted italic font-serif text-xl opacity-60">
+                                                No storytellers have earned points yet.
                                             </td>
                                         </tr>
                                     ) : (
@@ -115,29 +185,20 @@ const Leaderboard = () => {
                                                             >
                                                                 {entry.user.username}
                                                             </div>
-                                                            {entry.rank === 1 && <span className="text-[10px] uppercase tracking-tighter font-bold text-[#B8860B] bg-[#FFD700]/10 px-2 py-0.5 rounded-full border border-[#FFD700]/20">Grand Winner</span>}
+                                                            <span className={`text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border border-skin-primary/10 ${entry.user.rank === 'author' ? 'bg-[#FFD700]/10 text-[#B8860B] border-[#FFD700]/20' :
+                                                                    entry.user.rank === 'master' ? 'bg-skin-primary/20 text-skin-primary' :
+                                                                        'bg-skin-muted/10 text-skin-muted'
+                                                                }`}>
+                                                                {entry.user.rank || 'reader'}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td className="px-10 py-6">
-                                                    <span className="text-skin-text/70 font-serif italic truncate block max-w-[250px] leading-relaxed">
-                                                        "{entry.title || 'Untitled Submission'}"
-                                                    </span>
                                                 </td>
                                                 <td className="px-10 py-6 text-center">
                                                     <span className="font-serif font-black text-xl text-skin-text">{entry.contestUpvotes}</span>
                                                 </td>
                                                 <td className="px-10 py-6 text-center">
-                                                    {entry.bonus > 0 ? (
-                                                        <div className="flex flex-col items-center">
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black bg-skin-primary/10 text-skin-primary border border-skin-primary/20 shadow-sm">
-                                                                +{entry.bonus} BONUS
-                                                            </span>
-                                                            <span className="text-[8px] mt-1 text-skin-muted font-bold opacity-60">High Engagement</span>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-skin-muted opacity-20">—</span>
-                                                    )}
+                                                    <span className="font-serif font-black text-xl text-skin-text">{entry.storyUpvotes}</span>
                                                 </td>
                                                 <td className="px-10 py-6 text-right">
                                                     <span className={`text-3xl font-serif font-black drop-shadow-sm ${entry.rank === 1 ? 'text-skin-primary scale-110 inline-block' : 'text-skin-text'

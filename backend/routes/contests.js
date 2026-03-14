@@ -131,106 +131,156 @@ router.post('/vote/:submissionId', auth, async (req, res) => {
     }
 });
 
-// Get leaderboard
+// Get leaderboard (Global/Cumulative)
 router.get('/leaderboard', async (req, res) => {
     try {
-        // 1. Get the latest active contest (or most recent if none active)
-        const latestContest = await Contest.findOne({ active: true }).sort({ createdAt: -1 });
-        let contest = latestContest;
-
-        if (!contest) {
-            contest = await Contest.findOne({}).sort({ createdAt: -1 });
-        }
-
-        if (!contest) {
-            return res.json([]);
-        }
-
-        // 2. Get all submissions for this contest
-        const submissions = await ContestSubmission.find({ contest: contest._id })
-            .populate('user', 'username profilePicture')
-            .populate('contest', 'title');
-
-        // 3. Aggregate user scores from the contest
-        const userScores = {};
-        submissions.forEach(sub => {
-            const userId = sub.user._id.toString();
-            if (!userScores[userId]) {
-                userScores[userId] = {
-                    user: sub.user,
-                    contestUpvotes: 0,
-                    submissionTitle: sub.content.substring(0, 30) // Use snippet as title
-                };
-            }
-            userScores[userId].contestUpvotes += sub.votes.length;
-        });
-
-        // 4. Calculate Contribution Bonus (Platform-wide)
         const User = require('../models/User');
         const Story = require('../models/Story');
+        const ContestSubmission = require('../models/ContestSubmission');
 
-        // Aggregate Story upvotes per author
-        const storyUpvotes = await Story.aggregate([
-            { $project: { author: 1, upvotesCount: { $size: { $ifNull: ["$upvotes", []] } } } },
-            { $group: { _id: "$author", total: { $sum: "$upvotesCount" } } }
+        // Use a single aggregation for speed and reliability
+        const leaderboard = await User.aggregate([
+            {
+                // Join with all-time Story upvotes
+                $lookup: {
+                    from: 'stories',
+                    localField: '_id',
+                    foreignField: 'author',
+                    as: 'userStories'
+                }
+            },
+            {
+                // Join with all-time Contest Submissions
+                $lookup: {
+                    from: 'contestsubmissions',
+                    localField: '_id',
+                    foreignField: 'user',
+                    as: 'userSubmissions'
+                }
+            },
+            {
+                $project: {
+                    username: 1,
+                    profilePicture: 1,
+                    rank: 1,
+                    // Sum upvotes from all stories
+                    storyUpvotes: {
+                        $reduce: {
+                            input: "$userStories",
+                            initialValue: 0,
+                            in: { $add: ["$$value", { $size: { $ifNull: ["$$this.upvotes", []] } }] }
+                        }
+                    },
+                    // Sum upvotes from all contest submissions
+                    contestUpvotes: {
+                        $reduce: {
+                            input: "$userSubmissions",
+                            initialValue: 0,
+                            in: { $add: ["$$value", { $size: { $ifNull: ["$$this.votes", []] } }] }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    finalScore: { $add: ["$storyUpvotes", "$contestUpvotes"] }
+                }
+            },
+            // Filter out users with zero global influence to keep leaderboard clean
+            { $match: { finalScore: { $gt: 0 } } },
+            // Sort by highest score, then by contest performance
+            { $sort: { finalScore: -1, contestUpvotes: -1 } }
         ]);
 
-        // Aggregate ContestSubmission upvotes per user
-        const submissionUpvotes = await ContestSubmission.aggregate([
-            { $project: { user: 1, upvotesCount: { $size: { $ifNull: ["$votes", []] } } } },
-            { $group: { _id: "$user", total: { $sum: "$upvotesCount" } } }
-        ]);
-
-        // Combine platform stats
-        const totals = {};
-        storyUpvotes.forEach(item => {
-            if (item._id) {
-                const uid = item._id.toString();
-                totals[uid] = (totals[uid] || 0) + item.total;
+        // Add rank after sorting
+        const rankedLeaderboard = leaderboard.map((entry, index) => ({
+            ...entry,
+            rank: index + 1,
+            user: {
+                _id: entry._id,
+                username: entry.username,
+                profilePicture: entry.profilePicture,
+                rank: entry.rank
             }
-        });
-        submissionUpvotes.forEach(item => {
-            if (item._id) {
-                const uid = item._id.toString();
-                totals[uid] = (totals[uid] || 0) + item.total;
-            }
-        });
+        }));
 
-        let maxPlatformUpvotes = -1;
-        let bonusUserId = null;
-
-        Object.entries(totals).forEach(([uid, total]) => {
-            if (total > maxPlatformUpvotes && total > 0) {
-                maxPlatformUpvotes = total;
-                bonusUserId = uid;
-            }
-        });
-
-        // 5. Finalize scores
-        const leaderboard = Object.values(userScores).map(entry => {
-            const userId = entry.user._id.toString();
-            const hasBonus = userId === bonusUserId;
-            const finalScore = entry.contestUpvotes + (hasBonus ? 5 : 0);
-
-            return {
-                ...entry,
-                bonus: hasBonus ? 5 : 0,
-                finalScore,
-                title: entry.submissionTitle
-            };
-        });
-
-        // 6. Sort
-        leaderboard.sort((a, b) => b.finalScore - a.finalScore || b.contestUpvotes - a.contestUpvotes);
-
-        // Add Rank
-        leaderboard.forEach((entry, index) => {
-            entry.rank = index + 1;
-        });
-
-        res.json(leaderboard);
+        res.json(rankedLeaderboard);
     } catch (err) {
-        console.error(err.message);
+        console.error('Leaderboard error:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Helper function to get the winner of a specific contest
+async function getWinnerOfContest(contest) {
+    const submissions = await ContestSubmission.find({ contest: contest._id })
+        .populate('user', '_id')
+        .populate('contest', 'title');
+
+    if (submissions.length === 0) return null;
+
+    // Map scores (votes on that submission)
+    const scores = submissions.map(sub => ({
+        userId: sub.user._id.toString(),
+        votes: sub.votes.length
+    }));
+
+    // Sort by votes
+    scores.sort((a, b) => b.votes - a.votes);
+
+    // Return the user with most votes for this specific contest
+    return scores.length > 0 ? scores[0].userId : null;
+}
+
+// Check for 3 consecutive wins and author rank upgrade
+router.get('/check-streak', auth, async (req, res) => {
+    try {
+        const User = require('../models/User');
+        const currentUser = await User.findById(req.user.id);
+
+        if (!currentUser) return res.status(404).json({ msg: 'User not found' });
+
+        // If user is already author or master, no need to upgrade
+        if (currentUser.rank === 'author' || currentUser.rank === 'master') {
+            return res.json({ upgraded: false });
+        }
+
+        // Find last 3 finished contests
+        const endedContests = await Contest.find({ votingDeadline: { $lt: new Date() } })
+            .sort({ votingDeadline: -1 })
+            .limit(3);
+
+        if (endedContests.length < 3) {
+            return res.json({ upgraded: false, reason: 'Not enough ended contests yet' });
+        }
+
+        let wonAll = true;
+        for (let contest of endedContests) {
+            const winnerId = await getWinnerOfContest(contest);
+            if (winnerId !== req.user.id) {
+                wonAll = false;
+                break;
+            }
+        }
+
+        if (wonAll) {
+            currentUser.rank = 'author';
+            await currentUser.save();
+
+            const Notification = require('../models/Notification');
+            await Notification.create({
+                recipient: currentUser._id,
+                type: 'rank_upgrade',
+                message: 'Incredible! You have placed 1st in 3 consecutive contests and earned the title of Author!',
+                link: `/profile/${currentUser._id}`
+            });
+
+            return res.json({ upgraded: true, newRank: 'author' });
+        }
+
+        return res.json({ upgraded: false });
+    } catch (err) {
+        console.error('Streak check error:', err.message);
         res.status(500).send('Server Error');
     }
 });
