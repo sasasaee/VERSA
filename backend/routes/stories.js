@@ -170,14 +170,41 @@ router.post('/segment/:id', auth, async (req, res) => {
 
     // CREATE NOTIFICATION for story continuation
     if (story.author.toString() !== req.user.id) {
-      await Notification.create({
+      // Find existing notification
+      let existingNotif = await Notification.findOne({
         recipient: story.author,
-        sender: req.user.id,
         type: 'story_continuation',
-        story: story._id,
-        message: `${currentUser.username} continued your story "${story.title}"`,
-        link: `/story/${story._id}`
+        story: story._id
       });
+
+      // Calculate number of unique contributors excluding the author
+      const uniqueContributors = new Set(
+        story.segments
+          .filter(s => s.author.toString() !== story.author.toString())
+          .map(s => s.author.toString())
+      );
+      const count = uniqueContributors.size;
+
+      const message = count > 1 
+        ? `${currentUser.username} and ${count - 1} other${count - 1 === 1 ? '' : 's'} continued your story "${story.title}"`
+        : `${currentUser.username} continued your story "${story.title}"`;
+
+      if (existingNotif) {
+        existingNotif.message = message;
+        existingNotif.sender = req.user.id; // Update sender to latest
+        existingNotif.isRead = false;
+        existingNotif.createdAt = Date.now();
+        await existingNotif.save();
+      } else {
+        await Notification.create({
+          recipient: story.author,
+          sender: req.user.id,
+          type: 'story_continuation',
+          story: story._id,
+          message: message,
+          link: `/story/${story._id}`
+        });
+      }
     }
 
     const updatedStory = await Story.findById(req.params.id)
@@ -255,14 +282,33 @@ router.put('/like/:id', auth, async (req, res) => {
       const User = require('../models/User');
       const liker = await User.findById(req.user.id);
 
-      await Notification.create({
+      let existingNotif = await Notification.findOne({
         recipient: story.author,
-        sender: req.user.id,
         type: 'like',
-        story: story._id,
-        message: `${liker.username} liked your story "${story.title}"`,
-        link: `/`
+        story: story._id
       });
+
+      const count = story.upvotes.length;
+      const message = count > 1
+        ? `${liker.username} and ${count - 1} other${count - 1 === 1 ? '' : 's'} liked your story "${story.title}"`
+        : `${liker.username} liked your story "${story.title}"`;
+
+      if (existingNotif) {
+        existingNotif.message = message;
+        existingNotif.sender = req.user.id;
+        existingNotif.isRead = false;
+        existingNotif.createdAt = Date.now();
+        await existingNotif.save();
+      } else {
+        await Notification.create({
+          recipient: story.author,
+          sender: req.user.id,
+          type: 'like',
+          story: story._id,
+          message: message,
+          link: `/`
+        });
+      }
     }
 
     await story.save();
