@@ -6,7 +6,7 @@ const storySchema = new mongoose.Schema({
   headerImage: { type: String },
 
   isPaused: { type: Boolean, default: false },
-  authorRank: { type: String, enum: ['beginner', 'master'], default: 'beginner' },
+  authorRank: { type: String, enum: ['reader', 'beginner', 'master'], default: 'beginner' },
 
   segments: [
     {

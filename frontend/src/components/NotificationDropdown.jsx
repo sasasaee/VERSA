@@ -121,6 +121,8 @@ const NotificationDropdown = () => {
         return '✍️';
       case 'contest_announcement':
         return '🏆';
+      case 'rank_upgrade':
+        return '🌟';
       default:
         return '🔔';
     }
