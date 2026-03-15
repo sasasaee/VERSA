@@ -12,11 +12,12 @@ const storySchema = new mongoose.Schema({
     {
       content: { type: String, required: true },
       author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      createdAt: { type: Date, default: Date.now }
+      createdAt: { type: Date, default: Date.now },
+      editedAt: { type: Date, default: null },         // NEW: track last edit time
+      upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]  // NEW: per-segment upvotes
     }
   ],
 
-  // Who started the story? + adds timestamp
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   createdAt: { type: Date, default: Date.now }

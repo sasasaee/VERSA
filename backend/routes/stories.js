@@ -425,4 +425,121 @@ router.delete('/segment/:storyId/:segmentId', auth, async (req, res) => {
   }
 });
 
+// PUT: Edit story title/content (first segment) - story author only
+router.put('/edit/:id', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    // Only original story author can edit title
+    if (story.author.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized to edit this story' });
+    }
+
+    const { title, genre } = req.body;
+    if (title) story.title = title;
+    if (genre) story.genre = genre;
+
+    // Also update first segment content if provided
+    if (req.body.content && story.segments.length > 0) {
+      story.segments[0].content = req.body.content;
+      story.segments[0].editedAt = new Date();
+    }
+
+    await story.save();
+
+    const updatedStory = await Story.findById(req.params.id)
+      .populate('author', 'username rank profilePicture')
+      .populate('segments.author', 'username rank profilePicture');
+
+    res.json(updatedStory);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// PUT: Edit a specific segment - segment author only
+router.put('/segment/edit/:storyId/:segmentId', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.storyId);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    const segment = story.segments.id(req.params.segmentId);
+    if (!segment) return res.status(404).json({ msg: 'Segment not found' });
+
+    // Only segment author can edit it
+    if (segment.author.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized to edit this segment' });
+    }
+
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ msg: 'Content cannot be empty' });
+    }
+
+    segment.content = content;
+    segment.editedAt = new Date();
+
+    await story.save();
+
+    const updatedStory = await Story.findById(req.params.storyId)
+      .populate('author', 'username rank profilePicture')
+      .populate('segments.author', 'username rank profilePicture');
+
+    res.json(updatedStory);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// PUT: Like/Unlike a specific segment
+router.put('/segment/like/:storyId/:segmentId', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.storyId);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    const segment = story.segments.id(req.params.segmentId);
+    if (!segment) return res.status(404).json({ msg: 'Segment not found' });
+
+    // Prevent liking own segment
+    if (segment.author.toString() === req.user.id) {
+      return res.status(403).json({ msg: 'You cannot upvote your own segment' });
+    }
+
+    const alreadyLiked = segment.upvotes.some(id => id.toString() === req.user.id);
+
+    if (alreadyLiked) {
+      // Unlike
+      segment.upvotes = segment.upvotes.filter(id => id.toString() !== req.user.id);
+    } else {
+      // Like
+      segment.upvotes.unshift(req.user.id);
+
+      // Create notification for segment like
+      if (segment.author.toString() !== req.user.id) {
+        const User = require('../models/User');
+        const liker = await User.findById(req.user.id);
+
+        await Notification.create({
+          recipient: segment.author,
+          sender: req.user.id,
+          type: 'like',
+          story: story._id,
+          message: `${liker.username} liked your contribution to "${story.title}"`,
+          link: `/`
+        });
+      }
+    }
+
+    await story.save();
+    res.json(segment.upvotes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+
 module.exports = router;
