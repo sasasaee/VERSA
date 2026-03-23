@@ -20,18 +20,27 @@
 
 [data-theme='dark'] {
   /* Another Theme */
-  --bg-main: #9F8383;
-  --bg-secondary: #8B7272;
-  --bg-card: #C8AAAA;
-  --text-main: #574964;
-  --text-muted: #574964;
-  --primary: #574964;
-  --secondary: #574964;
-  --accent: #574964;
-  --text-on-primary: #FFF5F5;
-  --petal-color-1: #574964;
-  --petal-color-2: #7a6b8a;
-  --placeholder: #7a6b8a;
+  --bg-main: #0C1519;
+  /* Chinese Black */
+  --bg-secondary: #3A3534;
+  /* Jet */
+  --bg-card: #162127;
+  /* Dark Jungle Green */
+  --text-main: #CF9D7B;
+  /* Antique Brass */
+  --text-muted: #724B39;
+  /* Coffee */
+  --primary: #CF9D7B;
+  /* Antique Brass */
+  --secondary: #724B39;
+  /* Coffee */
+  --accent: #3A3534;
+  /* Jet */
+  --text-on-primary: #0C1519;
+  /* High contrast text on primary */
+  --petal-color-1: #CF9D7B;
+  --petal-color-2: #724B39;
+  --placeholder: #724B39;
 }
 
 /* Mapping to Tailwind classes */

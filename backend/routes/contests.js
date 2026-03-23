@@ -64,6 +64,11 @@ router.post('/submit', auth, async (req, res) => {
             return res.status(400).json({ msg: 'You have already submitted a story for this contest' });
         }
 
+        const wordCount = (content || '').trim().split(/\s+/).filter(Boolean).length;
+        if (wordCount > 200) {
+            return res.status(400).json({ msg: 'Contest submission cannot exceed 200 words.' });
+        }
+
         submission = new ContestSubmission({
             contest: contestId,
             user: req.user.id,

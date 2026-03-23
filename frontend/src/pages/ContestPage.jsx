@@ -147,6 +147,11 @@ const ContestPage = () => {
     const votingEnded = now > new Date(contest.votingDeadline);
 
     const userId = token ? JSON.parse(atob(token.split('.')[1])).id : null;
+    const getWordCount = (str) => {
+        if (!str) return 0;
+        return str.trim().split(/\s+/).filter(Boolean).length;
+    };
+    const wordCount = getWordCount(content);
 
     return (
         <div className="min-h-screen bg-skin-base pt-10 px-4 max-w-5xl mx-auto pb-20">
@@ -242,15 +247,15 @@ const ContestPage = () => {
                         <div className="max-w-4xl mx-auto space-y-8">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xl font-serif font-bold text-skin-primary">Write Your Masterpiece</h3>
-                                <span className="text-xs text-skin-muted font-bold uppercase tracking-widest">
-                                    {content.length} characters
+                                <span className={`text-xs font-bold uppercase tracking-widest ${wordCount > 200 ? 'text-red-500' : 'text-skin-muted'}`}>
+                                    {wordCount}/200 words
                                 </span>
                             </div>
 
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                placeholder="Start writing your story here..."
+                                placeholder="Start writing your story here... (Max 200 words)"
                                 className="w-full min-h-[400px] bg-skin-base/50 p-8 rounded-3xl border-2 border-skin-primary/10 focus:border-skin-secondary outline-none transition-all font-serif text-lg leading-relaxed placeholder:italic"
                                 spellCheck="false"
                             />
@@ -258,9 +263,9 @@ const ContestPage = () => {
                             <div className="flex justify-end pt-4">
                                 <button
                                     onClick={handleSubmit}
-                                    disabled={submitting || !content.trim()}
-                                    className={`px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl transition-all flex items-center gap-3 ${submitting || !content.trim()
-                                        ? 'bg-skin-muted/20 text-skin-muted cursor-not-allowed'
+                                    disabled={submitting || !content.trim() || wordCount > 200}
+                                    className={`px-12 py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl transition-all flex items-center gap-3 ${submitting || !content.trim() || wordCount > 200
+                                        ? 'bg-skin-muted/20 text-skin-muted cursor-not-allowed opacity-50'
                                         : 'bg-skin-primary text-white hover:brightness-110 hover:-translate-y-1'
                                         }`}
                                 >

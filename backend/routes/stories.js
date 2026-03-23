@@ -537,17 +537,43 @@ router.put('/segment/like/:storyId/:segmentId', auth, async (req, res) => {
 
       // Create notification for segment like
       if (segment.author.toString() !== req.user.id) {
-        const User = require('../models/User');
-        const liker = await User.findById(req.user.id);
-
-        await Notification.create({
+        let existingNotif = await Notification.findOne({
           recipient: segment.author,
-          sender: req.user.id,
           type: 'like',
           story: story._id,
-          message: `${liker.username} liked your contribution to "${story.title}"`,
-          link: `/`
+          message: { $regex: 'contribution' }
         });
+
+        await story.populate('segments.upvotes', 'username');
+        const populatedSegment = story.segments.id(req.params.segmentId);
+
+        const count = populatedSegment.upvotes.length;
+        let message = '';
+
+        if (count === 1) {
+          message = `${populatedSegment.upvotes[0].username} liked your contribution to "${story.title}".`;
+        } else if (count === 2) {
+          message = `${populatedSegment.upvotes[0].username} and ${populatedSegment.upvotes[1].username} liked your contribution to "${story.title}".`;
+        } else if (count >= 3) {
+          message = `${populatedSegment.upvotes[0].username}, ${populatedSegment.upvotes[1].username}, and ${count - 2} others liked your contribution to "${story.title}".`;
+        }
+
+        if (existingNotif) {
+          existingNotif.message = message;
+          existingNotif.sender = req.user.id;
+          existingNotif.isRead = false;
+          existingNotif.createdAt = Date.now();
+          await existingNotif.save();
+        } else {
+          await Notification.create({
+            recipient: segment.author,
+            sender: req.user.id,
+            type: 'like',
+            story: story._id,
+            message: message,
+            link: `/`
+          });
+        }
       }
     }
 
