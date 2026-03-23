@@ -185,7 +185,7 @@ router.post('/segment/:id', auth, async (req, res) => {
       );
       const count = uniqueContributors.size;
 
-      const message = count > 1 
+      const message = count > 1
         ? `${currentUser.username} and ${count - 1} other${count - 1 === 1 ? '' : 's'} continued your story "${story.title}"`
         : `${currentUser.username} continued your story "${story.title}"`;
 
@@ -280,7 +280,6 @@ router.put('/like/:id', auth, async (req, res) => {
 
       // CREATE NOTIFICATION
       const User = require('../models/User');
-      const liker = await User.findById(req.user.id);
 
       let existingNotif = await Notification.findOne({
         recipient: story.author,
@@ -288,10 +287,18 @@ router.put('/like/:id', auth, async (req, res) => {
         story: story._id
       });
 
+      await story.populate('upvotes', 'username');
+
       const count = story.upvotes.length;
-      const message = count > 1
-        ? `${liker.username} and ${count - 1} other${count - 1 === 1 ? '' : 's'} liked your story "${story.title}"`
-        : `${liker.username} liked your story "${story.title}"`;
+      let message = '';
+
+      if (count === 1) {
+        message = `${story.upvotes[0].username} liked your story.`;
+      } else if (count === 2) {
+        message = `${story.upvotes[0].username} and ${story.upvotes[1].username} liked your story.`;
+      } else if (count >= 3) {
+        message = `${story.upvotes[0].username}, ${story.upvotes[1].username}, and ${count - 2} others liked your story.`;
+      }
 
       if (existingNotif) {
         existingNotif.message = message;

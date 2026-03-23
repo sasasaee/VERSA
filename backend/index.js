@@ -22,7 +22,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/user', require('./routes/user'));
 app.use('/api/notifications', notificationRoutes);
-// app.use('/api/follow', require('./routes/follow')); // follow.js missing
+app.use('/api/follow', require('./routes/follow'));
 app.use('/api/contests', contestRoutes);
 
 // =========== Weekly Contest Automated Cron Job (DISABLED - missing utils) ===========
