@@ -5,7 +5,7 @@ const SortDropdown = ({ sortBy, setSortBy, filterGenre, setFilterGenre }) => {
     const [view, setView] = useState('main'); // 'main' or 'genres'
     const dropdownRef = useRef(null);
 
-    const genres = ['All Genres', 'General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller'];
+    const genres = ['All Genres', 'General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller', 'Others'];
 
     useEffect(() => {
         const handleClickOutside = (e) => {

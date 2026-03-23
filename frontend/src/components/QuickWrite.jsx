@@ -148,12 +148,16 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
               <select
                 value={formData.genre}
                 onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                className="bg-skin-base p-2 rounded-lg text-sm text-skin-text border border-skin-muted/20 outline-none h-[42px]"
+                className="bg-skin-card p-2 rounded-lg text-sm text-skin-text border border-skin-muted/30 hover:border-skin-primary focus:border-skin-primary outline-none transition-all cursor-pointer shadow-sm flex-1 min-w-[120px]"
               >
                 <option>General</option>
-                <option>Horror</option>
+                <option>Fantasy</option>
                 <option>Sci-Fi</option>
+                <option>Mystery</option>
                 <option>Romance</option>
+                <option>Horror</option>
+                <option>Thriller</option>
+                <option>Others</option>
               </select>
             </div>
           </div>

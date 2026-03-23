@@ -19,6 +19,11 @@ router.post('/', [auth, upload.single('headerImage')], async (req, res) => {
       return res.status(400).json({ msg: 'Please provide both a title and content.' });
     }
 
+    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > 200) {
+      return res.status(400).json({ msg: 'Max 200 words allowed for a segment.' });
+    }
+
     const User = require('../models/User');
     const user = await User.findById(req.user.id);
     // If user is a 'reader', upgrade to 'beginner' before saving story
@@ -160,8 +165,14 @@ router.post('/segment/:id', auth, async (req, res) => {
       });
     }
 
+    const newSegmentContent = req.body.content || '';
+    const wordCount = newSegmentContent.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > 200) {
+      return res.status(400).json({ msg: 'Max 200 words allowed for a segment.' });
+    }
+
     const newSegment = {
-      content: req.body.content,
+      content: newSegmentContent,
       author: req.user.id
     };
 
