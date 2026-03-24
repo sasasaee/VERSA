@@ -19,6 +19,11 @@ router.post('/', [auth, upload.single('headerImage')], async (req, res) => {
       return res.status(400).json({ msg: 'Please provide both a title and content.' });
     }
 
+    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > 200) {
+      return res.status(400).json({ msg: 'Max 200 words allowed for a segment.' });
+    }
+
     const User = require('../models/User');
     const user = await User.findById(req.user.id);
     // If user is a 'reader', upgrade to 'beginner' before saving story
@@ -160,8 +165,14 @@ router.post('/segment/:id', auth, async (req, res) => {
       });
     }
 
+    const newSegmentContent = req.body.content || '';
+    const wordCount = newSegmentContent.trim().split(/\s+/).filter(Boolean).length;
+    if (wordCount > 200) {
+      return res.status(400).json({ msg: 'Max 200 words allowed for a segment.' });
+    }
+
     const newSegment = {
-      content: req.body.content,
+      content: newSegmentContent,
       author: req.user.id
     };
 
@@ -185,7 +196,7 @@ router.post('/segment/:id', auth, async (req, res) => {
       );
       const count = uniqueContributors.size;
 
-      const message = count > 1 
+      const message = count > 1
         ? `${currentUser.username} and ${count - 1} other${count - 1 === 1 ? '' : 's'} continued your story "${story.title}"`
         : `${currentUser.username} continued your story "${story.title}"`;
 
@@ -280,7 +291,6 @@ router.put('/like/:id', auth, async (req, res) => {
 
       // CREATE NOTIFICATION
       const User = require('../models/User');
-      const liker = await User.findById(req.user.id);
 
       let existingNotif = await Notification.findOne({
         recipient: story.author,
@@ -288,10 +298,18 @@ router.put('/like/:id', auth, async (req, res) => {
         story: story._id
       });
 
+      await story.populate('upvotes', 'username');
+
       const count = story.upvotes.length;
-      const message = count > 1
-        ? `${liker.username} and ${count - 1} other${count - 1 === 1 ? '' : 's'} liked your story "${story.title}"`
-        : `${liker.username} liked your story "${story.title}"`;
+      let message = '';
+
+      if (count === 1) {
+        message = `${story.upvotes[0].username} liked your story.`;
+      } else if (count === 2) {
+        message = `${story.upvotes[0].username} and ${story.upvotes[1].username} liked your story.`;
+      } else if (count >= 3) {
+        message = `${story.upvotes[0].username}, ${story.upvotes[1].username}, and ${count - 2} others liked your story.`;
+      }
 
       if (existingNotif) {
         existingNotif.message = message;
@@ -424,5 +442,148 @@ router.delete('/segment/:storyId/:segmentId', auth, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+// PUT: Edit story title/content (first segment) - story author only
+router.put('/edit/:id', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    // Only original story author can edit title
+    if (story.author.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized to edit this story' });
+    }
+
+    const { title, genre } = req.body;
+    if (title) story.title = title;
+    if (genre) story.genre = genre;
+
+    // Also update first segment content if provided
+    if (req.body.content && story.segments.length > 0) {
+      story.segments[0].content = req.body.content;
+      story.segments[0].editedAt = new Date();
+    }
+
+    await story.save();
+
+    const updatedStory = await Story.findById(req.params.id)
+      .populate('author', 'username rank profilePicture')
+      .populate('segments.author', 'username rank profilePicture');
+
+    res.json(updatedStory);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// PUT: Edit a specific segment - segment author only
+router.put('/segment/edit/:storyId/:segmentId', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.storyId);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    const segment = story.segments.id(req.params.segmentId);
+    if (!segment) return res.status(404).json({ msg: 'Segment not found' });
+
+    // Only segment author can edit it
+    if (segment.author.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'Not authorized to edit this segment' });
+    }
+
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ msg: 'Content cannot be empty' });
+    }
+
+    segment.content = content;
+    segment.editedAt = new Date();
+
+    await story.save();
+
+    const updatedStory = await Story.findById(req.params.storyId)
+      .populate('author', 'username rank profilePicture')
+      .populate('segments.author', 'username rank profilePicture');
+
+    res.json(updatedStory);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// PUT: Like/Unlike a specific segment
+router.put('/segment/like/:storyId/:segmentId', auth, async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.storyId);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    const segment = story.segments.id(req.params.segmentId);
+    if (!segment) return res.status(404).json({ msg: 'Segment not found' });
+
+    // Prevent liking own segment
+    if (segment.author.toString() === req.user.id) {
+      return res.status(403).json({ msg: 'You cannot upvote your own segment' });
+    }
+
+    const alreadyLiked = segment.upvotes.some(id => id.toString() === req.user.id);
+
+    if (alreadyLiked) {
+      // Unlike
+      segment.upvotes = segment.upvotes.filter(id => id.toString() !== req.user.id);
+    } else {
+      // Like
+      segment.upvotes.unshift(req.user.id);
+
+      // Create notification for segment like
+      if (segment.author.toString() !== req.user.id) {
+        let existingNotif = await Notification.findOne({
+          recipient: segment.author,
+          type: 'like',
+          story: story._id,
+          message: { $regex: 'contribution' }
+        });
+
+        await story.populate('segments.upvotes', 'username');
+        const populatedSegment = story.segments.id(req.params.segmentId);
+
+        const count = populatedSegment.upvotes.length;
+        let message = '';
+
+        if (count === 1) {
+          message = `${populatedSegment.upvotes[0].username} liked your contribution to "${story.title}".`;
+        } else if (count === 2) {
+          message = `${populatedSegment.upvotes[0].username} and ${populatedSegment.upvotes[1].username} liked your contribution to "${story.title}".`;
+        } else if (count >= 3) {
+          message = `${populatedSegment.upvotes[0].username}, ${populatedSegment.upvotes[1].username}, and ${count - 2} others liked your contribution to "${story.title}".`;
+        }
+
+        if (existingNotif) {
+          existingNotif.message = message;
+          existingNotif.sender = req.user.id;
+          existingNotif.isRead = false;
+          existingNotif.createdAt = Date.now();
+          await existingNotif.save();
+        } else {
+          await Notification.create({
+            recipient: segment.author,
+            sender: req.user.id,
+            type: 'like',
+            story: story._id,
+            message: message,
+            link: `/`
+          });
+        }
+      }
+    }
+
+    await story.save();
+    res.json(segment.upvotes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 
 module.exports = router;

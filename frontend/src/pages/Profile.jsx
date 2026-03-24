@@ -90,10 +90,10 @@ const Profile = () => {
             });
             setUser(res.data);
             setUserSavedStories(res.data.savedStories || []);
-            
+
             setFollowersCount(res.data.followers?.length || 0);
             setFollowingCount(res.data.following?.length || 0);
-            
+
             if (id && currentUserId) {
                 setIsFollowing(res.data.followers?.some(fid => fid.toString() === currentUserId.toString()));
             }
@@ -403,14 +403,14 @@ const Profile = () => {
                                                 </p>
                                                 <p className="text-xs text-skin-muted uppercase tracking-tighter">Stories</p>
                                             </div>
-                                            <div 
+                                            <div
                                                 className="text-center border-r border-skin-muted/20 pr-6 cursor-pointer hover:opacity-70 transition-opacity"
                                                 onClick={() => setShowFollowersModal(true)}
                                             >
                                                 <p className="text-2xl font-bold text-skin-primary">{followersCount}</p>
                                                 <p className="text-xs text-skin-muted uppercase tracking-tighter">Followers</p>
                                             </div>
-                                            <div 
+                                            <div
                                                 className="text-center border-r border-skin-muted/20 pr-6 cursor-pointer hover:opacity-70 transition-opacity"
                                                 onClick={() => setShowFollowingModal(true)}
                                             >
@@ -435,11 +435,10 @@ const Profile = () => {
                                                 <button
                                                     onClick={handleFollow}
                                                     disabled={followLoading}
-                                                    className={`px-8 py-2.5 rounded-full font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 ${
-                                                        isFollowing 
-                                                        ? 'bg-skin-muted/20 text-skin-text hover:bg-red-500/10 hover:text-red-500 border border-skin-muted/30' 
-                                                        : 'bg-skin-primary text-skin-on-primary hover:brightness-110'
-                                                    }`}
+                                                    className={`px-8 py-2.5 rounded-full font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 ${isFollowing
+                                                            ? 'bg-skin-muted/20 text-skin-text hover:bg-red-500/10 hover:text-red-500 border border-skin-muted/30'
+                                                            : 'bg-skin-primary text-skin-on-primary hover:brightness-110'
+                                                        }`}
                                                 >
                                                     {followLoading ? (
                                                         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
@@ -667,13 +666,13 @@ const Profile = () => {
                 )}
 
                 {/* Followers/Following Modals */}
-                <FollowListModal 
+                <FollowListModal
                     isOpen={showFollowersModal}
                     onClose={() => setShowFollowersModal(false)}
                     title="Followers"
                     users={followersList}
                 />
-                <FollowListModal 
+                <FollowListModal
                     isOpen={showFollowingModal}
                     onClose={() => setShowFollowingModal(false)}
                     title="Following"
@@ -699,7 +698,7 @@ const FollowListModal = ({ isOpen, onClose, title, users }) => {
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
-            <div 
+            <div
                 className="bg-skin-card w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-modal-pop"
                 onClick={e => e.stopPropagation()}
             >
@@ -711,7 +710,7 @@ const FollowListModal = ({ isOpen, onClose, title, users }) => {
                         </svg>
                     </button>
                 </div>
-                
+
                 <div className="max-h-[60vh] overflow-y-auto p-4 space-y-2">
                     {users.length === 0 ? (
                         <div className="py-10 text-center text-skin-muted italic font-serif">
@@ -719,8 +718,8 @@ const FollowListModal = ({ isOpen, onClose, title, users }) => {
                         </div>
                     ) : (
                         users.map(user => (
-                            <div 
-                                key={user._id} 
+                            <div
+                                key={user._id}
                                 className="flex items-center gap-4 p-3 rounded-2xl hover:bg-skin-primary/5 transition-all cursor-pointer group"
                                 onClick={() => {
                                     onClose();

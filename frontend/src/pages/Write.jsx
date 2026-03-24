@@ -10,7 +10,7 @@ const Write = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const genres = ['General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller'];
+  const genres = ['General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller', 'Others'];
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -154,8 +154,8 @@ const Write = () => {
         {/*Publish Button */}
         <button
           type="submit"
-          disabled={loading || wordCount > 200}
-          className={`fixed bottom-10 right-10 px-8 py-3 bg-skin-secondary text-white rounded-full font-bold shadow-lg hover:scale-110 hover:shadow-xl transition-all z-20 ${loading || wordCount > 200 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={loading || wordCount > 200 || wordCount === 0}
+          className={`fixed bottom-10 right-10 px-8 py-3 bg-skin-secondary text-white rounded-full font-bold shadow-lg hover:scale-110 hover:shadow-xl transition-all z-20 ${loading || wordCount > 200 || wordCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {loading ? 'Publishing...' : 'Publish Story'}
         </button>
