@@ -13,10 +13,10 @@ router.put('/profile', auth, updateUserProfile);
 // Upload profile picture
 router.post('/profile/picture', auth, upload.single('profilePicture'), uploadProfilePicture);
 
-// Get user by ID
-router.get('/:id', auth, getUserById);
-
 // Get saved stories and segments
 router.get('/saved', auth, require('../controllers/userController').getSavedItems);
+
+// Get user by ID
+router.get('/:id', auth, getUserById);
 
 module.exports = router;
