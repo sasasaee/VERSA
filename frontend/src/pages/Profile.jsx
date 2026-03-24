@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import SortDropdown from '../components/SortDropdown';
 import StoryModal from '../components/StoryModal';
 import Toast from '../components/Toast';
+import UserListModal from '../components/UserListModal';
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -40,6 +41,11 @@ const Profile = () => {
     const [showFollowingModal, setShowFollowingModal] = useState(false);
     const [followersList, setFollowersList] = useState([]);
     const [followingList, setFollowingList] = useState([]);
+
+    // Liker State
+    const [showLikersModal, setShowLikersModal] = useState(false);
+    const [likersList, setLikersList] = useState([]);
+    const [likersLoading, setLikersLoading] = useState(false);
 
     const { id } = useParams(); // Get ID from URL
     const navigate = useNavigate();
@@ -220,6 +226,54 @@ const Profile = () => {
         } catch (err) {
             console.error("Error fetching contest submissions:", err);
             setContestSubmissionsLoading(false);
+        }
+    };
+
+    const fetchStoryLikers = async (storyId) => {
+        try {
+            setLikersLoading(true);
+            setShowLikersModal(true);
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/stories/${storyId}/likers`, {
+                headers: { 'x-auth-token': token }
+            });
+            setLikersList(res.data);
+            setLikersLoading(false);
+        } catch (err) {
+            console.error("Error fetching story likers:", err);
+            setLikersLoading(false);
+        }
+    };
+
+    const fetchSegmentLikers = async (storyId, segmentId) => {
+        try {
+            setLikersLoading(true);
+            setShowLikersModal(true);
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/stories/${storyId}/segment/${segmentId}/likers`, {
+                headers: { 'x-auth-token': token }
+            });
+            setLikersList(res.data);
+            setLikersLoading(false);
+        } catch (err) {
+            console.error("Error fetching segment likers:", err);
+            setLikersLoading(false);
+        }
+    };
+
+    const fetchContestSubmissionLikers = async (submissionId) => {
+        try {
+            setLikersLoading(true);
+            setShowLikersModal(true);
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/contests/submission/${submissionId}/likers`, {
+                headers: { 'x-auth-token': token }
+            });
+            setLikersList(res.data);
+            setLikersLoading(false);
+        } catch (err) {
+            console.error("Error fetching contest submission likers:", err);
+            setLikersLoading(false);
         }
     };
 
@@ -614,16 +668,23 @@ const Profile = () => {
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center gap-6">
-                                                            <div className="flex items-center gap-2">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-skin-primary">
-                                                                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-                                                                </svg>
-                                                                <span className="text-sm font-bold text-skin-primary">{submission.votes?.length || 0} Votes</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
+                                                              <div 
+                                                                  className="flex items-center gap-1 cursor-pointer hover:bg-skin-primary/5 px-1.5 py-0.5 rounded-full transition-colors"
+                                                                  onClick={(e) => {
+                                                                      e.stopPropagation();
+                                                                      fetchContestSubmissionLikers(submission._id);
+                                                                  }}
+                                                                  title="See who voted for this entry"
+                                                              >
+                                                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-skin-primary">
+                                                                      <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                                                                  </svg>
+                                                                  <span className="text-sm font-bold text-skin-primary px-0.5">{submission.votes?.length || 0}</span>
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                  );
+                                              })}
                                         </div>
                                     )}
                                 </div>
@@ -704,11 +765,27 @@ const Profile = () => {
                                                     {story.segments?.[0]?.content || "No content yet."}
                                                 </p>
                                                 <div className="flex items-center justify-between pt-2 border-t border-skin-muted/10">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-skin-primary/10 flex items-center justify-center text-[10px] text-skin-primary font-bold">
-                                                            {story.segments?.length || 0}
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-6 h-6 rounded-full bg-skin-primary/10 flex items-center justify-center text-[10px] text-skin-primary font-bold">
+                                                                {story.segments?.length || 0}
+                                                            </div>
+                                                            <span className="text-[10px] text-skin-muted uppercase font-bold tracking-tight">Segments</span>
                                                         </div>
-                                                        <span className="text-[10px] text-skin-muted uppercase font-bold tracking-tight">Segments</span>
+
+                                                        <div 
+                                                            className="flex items-center gap-0.5 cursor-pointer hover:bg-skin-primary/5 px-1 py-0.5 rounded-full transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                fetchStoryLikers(story._id);
+                                                            }}
+                                                            title="See who liked this story"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-skin-secondary">
+                                                                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                                                            </svg>
+                                                            <span className="text-sm font-bold text-skin-secondary px-0.5">{story.upvotes?.length || 0}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -753,18 +830,25 @@ const Profile = () => {
                     />
                 )}
 
-                {/* Followers/Following Modals */}
-                <FollowListModal
+                {/* Followers/Following/Likers Modals */}
+                <UserListModal
                     isOpen={showFollowersModal}
                     onClose={() => setShowFollowersModal(false)}
                     title="Followers"
                     users={followersList}
                 />
-                <FollowListModal
+                <UserListModal
                     isOpen={showFollowingModal}
                     onClose={() => setShowFollowingModal(false)}
                     title="Following"
                     users={followingList}
+                />
+                <UserListModal
+                    isOpen={showLikersModal}
+                    onClose={() => setShowLikersModal(false)}
+                    title="Liked By"
+                    users={likersList}
+                    loading={likersLoading}
                 />
 
                 {/* Toast Notification */}
@@ -775,67 +859,6 @@ const Profile = () => {
                         onClose={() => setToast(null)}
                     />
                 )}
-            </div>
-        </div>
-    );
-};
-
-const FollowListModal = ({ isOpen, onClose, title, users }) => {
-    const navigate = useNavigate();
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
-            <div
-                className="bg-skin-card w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-modal-pop"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="px-6 py-4 border-b border-skin-muted/10 flex justify-between items-center bg-skin-primary/5">
-                    <h3 className="text-xl font-serif font-bold text-skin-primary">{title}</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-skin-primary/10 rounded-full transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div className="max-h-[60vh] overflow-y-auto p-4 space-y-2">
-                    {users.length === 0 ? (
-                        <div className="py-10 text-center text-skin-muted italic font-serif">
-                            No users found.
-                        </div>
-                    ) : (
-                        users.map(user => (
-                            <div
-                                key={user._id}
-                                className="flex items-center gap-4 p-3 rounded-2xl hover:bg-skin-primary/5 transition-all cursor-pointer group"
-                                onClick={() => {
-                                    onClose();
-                                    navigate(`/profile/${user._id}`);
-                                }}
-                            >
-                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-skin-primary/10 group-hover:border-skin-primary/30 transition-colors">
-                                    {user.profilePicture ? (
-                                        <img src={user.profilePicture} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-skin-muted/10 text-skin-primary font-bold">
-                                            {user.username[0].toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-bold text-skin-text group-hover:text-skin-primary transition-colors">{user.username}</p>
-                                    <span className="text-[10px] uppercase tracking-widest font-bold text-skin-muted">{user.rank || 'beginner'}</span>
-                                </div>
-                                <div className="text-skin-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
             </div>
         </div>
     );

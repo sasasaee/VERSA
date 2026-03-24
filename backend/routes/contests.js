@@ -303,4 +303,23 @@ router.get('/check-streak', auth, async (req, res) => {
     }
 });
 
+// @route   GET /api/contests/submission/:id/likers
+// @desc    Get populated list of users who liked an entry
+// @access  Private
+router.get('/submission/:id/likers', auth, async (req, res) => {
+    try {
+        const submission = await ContestSubmission.findById(req.params.id)
+            .populate('votes', 'username profilePicture rank');
+
+        if (!submission) {
+            return res.status(404).json({ msg: 'Submission not found' });
+        }
+
+        res.json(submission.votes);
+    } catch (err) {
+        console.error('Submission likers fetch error:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 module.exports = router;

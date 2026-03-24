@@ -6,6 +6,7 @@ import QuickWrite from '../components/QuickWrite';
 import StoryModal from '../components/StoryModal';
 import Toast from '../components/Toast';
 import RankUpgradeModal from '../components/RankUpgradeModal';
+import UserListModal from '../components/UserListModal';
 
 // Get current user ID to check if we liked the story
 const getUserIdFromToken = (token) => {
@@ -38,6 +39,11 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [filterGenre, setFilterGenre] = useState('All Genres');
   const [showRankUpgrade, setShowRankUpgrade] = useState(false);
+
+  // Liker State
+  const [showLikersModal, setShowLikersModal] = useState(false);
+  const [likersList, setLikersList] = useState([]);
+  const [likersLoading, setLikersLoading] = useState(false);
 
   // Get token and User ID immediately
   const token = localStorage.getItem('token');
@@ -251,6 +257,25 @@ const Dashboard = () => {
     }
   };
 
+  const fetchStoryLikers = async (storyId) => {
+    try {
+      setLikersLoading(true);
+      setShowLikersModal(true);
+      const cleanToken = token.replace(/^"|"$/g, '');
+      const res = await fetch(`http://localhost:5000/api/stories/${storyId}/likers`, {
+        headers: { 'x-auth-token': cleanToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLikersList(data);
+      }
+    } catch (err) {
+      console.error("Error fetching story likers:", err);
+    } finally {
+      setLikersLoading(false);
+    }
+  };
+
   //check if liked
   const isLiked = (upvotes) => {
     if (!upvotes || !currentUserId) return false;
@@ -460,60 +485,65 @@ const Dashboard = () => {
 
                     {/* Action buttons */}
                     <div className="flex items-center justify-between border-t border-skin-muted/20 pt-4 relative">
-                      <div className="flex items-center gap-6">
-                        {/* BOOK UPVOTE BUTTON */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (String(story.author?._id) === String(currentUserId)) return;
-                            handleLike(story._id);
-                          }}
-                          disabled={String(story.author?._id) === String(currentUserId)}
-                          className={`flex items-center gap-2 group transition-all focus:outline-none ${String(story.author?._id) === String(currentUserId)
-                            ? 'opacity-50 cursor-not-allowed'
-                            : ''
-                            }`}
-                          title={
-                            String(story.author?._id) === String(currentUserId)
-                              ? "You cannot upvote your own story"
-                              : "Like this story"
-                          }
-                        >
-                          <div className="relative">
-                            <div
-                              className={`absolute inset-0 bg-skin-secondary/20 rounded-full blur-md transition-opacity duration-500 ${isLiked(story.upvotes)
-                                ? "opacity-100 scale-150"
-                                : "opacity-0 scale-0"
-                                }`}
-                            />
-
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isLiked(story.upvotes)
-                                ? "fill-skin-primary text-skin-primary scale-110"
-                                : "fill-none text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
-                                }`}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                              />
-                            </svg>
-                          </div>
-
-                          <span
-                            className={`font-medium text-sm transition-colors duration-300 ${isLiked(story.upvotes)
-                              ? "text-skin-primary font-bold"
-                              : "text-skin-muted"
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          {/* BOOK UPVOTE BUTTON (Icon Only) */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (String(story.author?._id) === String(currentUserId)) return;
+                              handleLike(story._id);
+                            }}
+                            disabled={String(story.author?._id) === String(currentUserId)}
+                            className={`group transition-all focus:outline-none ${String(story.author?._id) === String(currentUserId)
+                              ? 'opacity-50 cursor-not-allowed'
+                              : ''
                               }`}
+                            title={
+                              String(story.author?._id) === String(currentUserId)
+                                ? "You cannot upvote your own story"
+                                : "Like this story"
+                            }
+                          >
+                            <div className="relative">
+                              <div
+                                className={`absolute inset-0 bg-skin-secondary/20 rounded-full blur-md transition-opacity duration-500 ${isLiked(story.upvotes)
+                                  ? "opacity-100 scale-150"
+                                  : "opacity-0 scale-0"
+                                  }`}
+                              />
+
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isLiked(story.upvotes)
+                                  ? "fill-skin-primary text-skin-primary scale-110"
+                                  : "fill-none text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
+                                  }`}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                                />
+                              </svg>
+                            </div>
+                          </button>
+
+                          {/* Likers Count - Clickable for everyone */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fetchStoryLikers(story._id);
+                            }}
+                            className={`font-bold text-sm transition-colors duration-300 hover:text-skin-secondary px-0.5 ${isLiked(story.upvotes) ? "text-skin-primary" : "text-skin-muted"}`}
+                            title="See who liked this story"
                           >
                             {story.upvotes?.length || 0}
-                          </span>
-                        </button>
+                          </button>
+                        </div>
 
                         {/* Save Story Toggle (Quick access) */}
                         <button
@@ -565,6 +595,15 @@ const Dashboard = () => {
       {showRankUpgrade && (
         <RankUpgradeModal onClose={() => setShowRankUpgrade(false)} />
       )}
+
+      {/* Likers Modal */}
+      <UserListModal
+        isOpen={showLikersModal}
+        onClose={() => setShowLikersModal(false)}
+        title="Liked By"
+        users={likersList}
+        loading={likersLoading}
+      />
 
       {/* Toast Notification */}
       {toast && (

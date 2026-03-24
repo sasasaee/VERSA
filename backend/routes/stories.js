@@ -585,5 +585,40 @@ router.put('/segment/like/:storyId/:segmentId', auth, async (req, res) => {
   }
 });
 
+// GET: Likers of a story
+router.get('/:id/likers', async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id)
+      .populate('upvotes', 'username profilePicture rank');
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+    res.json(story.upvotes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// GET: Likers of a specific segment
+router.get('/:storyId/segment/:segmentId/likers', async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.storyId);
+    if (!story) return res.status(404).json({ msg: 'Story not found' });
+
+    const segment = story.segments.id(req.params.segmentId);
+    if (!segment) return res.status(404).json({ msg: 'Segment not found' });
+
+    await story.populate({
+      path: 'segments.upvotes',
+      select: 'username profilePicture rank'
+    });
+    
+    const populatedSegment = story.segments.id(req.params.segmentId);
+    res.json(populatedSegment.upvotes);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 
 module.exports = router;

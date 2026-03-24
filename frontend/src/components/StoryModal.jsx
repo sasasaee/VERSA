@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Toast from './Toast';
+import UserListModal from './UserListModal';
 
 const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
   const navigate = useNavigate();
@@ -10,6 +11,11 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
   const [userSavedStories, setUserSavedStories] = useState([]);
   const [userSavedSegments, setUserSavedSegments] = useState([]);
   const [toast, setToast] = useState(null);
+
+  // Liker State
+  const [showLikersModal, setShowLikersModal] = useState(false);
+  const [likersList, setLikersList] = useState([]);
+  const [likersLoading, setLikersLoading] = useState(false);
 
   // Edit state
   const [editingSegmentId, setEditingSegmentId] = useState(null);
@@ -232,6 +238,25 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
     } catch (err) { console.error(err); }
   };
 
+  const fetchSegmentLikers = async (segmentId) => {
+    try {
+      setLikersLoading(true);
+      setShowLikersModal(true);
+      const token = getCleanToken();
+      const res = await fetch(`http://localhost:5000/api/stories/${storyId}/segment/${segmentId}/likers`, {
+        headers: { 'x-auth-token': token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLikersList(data);
+      }
+    } catch (err) {
+      console.error("Error fetching segment likers:", err);
+    } finally {
+      setLikersLoading(false);
+    }
+  };
+
   const handlePublish = async () => {
     if (getWordCount(newSegment) > 200) return alert("Continuation cannot exceed 200 words.");
     const token = getCleanToken();
@@ -437,33 +462,42 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
                       {seg.author?.username}
                     </div>
 
-                    {/* Segment Upvote Button */}
-                    {String(seg.author?._id || seg.author) !== String(currentUserId) && (
-                      <button
-                        onClick={() => handleSegmentLike(seg._id)}
-                        className="flex items-center gap-1 group/like transition-all focus:outline-none"
-                        title="Upvote this part"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className={`w-4 h-4 transition-all duration-300 ${seg.upvotes?.some(id => String(id) === String(currentUserId))
-                            ? 'fill-skin-primary text-skin-primary scale-110'
-                            : 'fill-none text-skin-muted group-hover/like:text-skin-primary'
-                            }`}
+                    {/* Segment Upvote Button & Likers Count */}
+                    <div className="flex items-center gap-1">
+                      {String(seg.author?._id || seg.author) !== String(currentUserId) && (
+                        <button
+                          onClick={() => handleSegmentLike(seg._id)}
+                          className="group/like transition-all focus:outline-none"
+                          title="Upvote this part"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z" />
-                        </svg>
-                        <span className={`text-xs font-medium transition-colors ${seg.upvotes?.some(id => String(id) === String(currentUserId))
-                          ? 'text-skin-primary font-bold'
-                          : 'text-skin-muted'
-                          }`}>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className={`w-4 h-4 transition-all duration-300 ${seg.upvotes?.some(id => String(id) === String(currentUserId))
+                              ? 'fill-skin-primary text-skin-primary scale-110'
+                              : 'fill-none text-skin-muted group-hover/like:text-skin-primary'
+                              }`}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z" />
+                          </svg>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fetchSegmentLikers(seg._id);
+                        }}
+                        className={`flex items-center gap-1 hover:bg-skin-primary/5 px-2 py-0.5 rounded-full transition-colors group/likers ${seg.upvotes?.some(id => String(id) === String(currentUserId)) ? 'text-skin-primary font-bold' : 'text-skin-muted group-hover/likers:text-skin-primary'}`}
+                        title="See who liked this part"
+                      >
+                        <span className="text-xs font-bold">
                           {seg.upvotes?.length || 0}
                         </span>
                       </button>
-                    )}
+                    </div>
                   </div>
 
                   {/* Segment Menu */}
@@ -558,6 +592,14 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
           </div>
         </div>
       </div>
+
+      <UserListModal
+        isOpen={showLikersModal}
+        onClose={() => setShowLikersModal(false)}
+        title="Liked By"
+        users={likersList}
+        loading={likersLoading}
+      />
 
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
