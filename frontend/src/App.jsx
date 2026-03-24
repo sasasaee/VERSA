@@ -9,9 +9,12 @@ import About from './pages/About';
 import ContestPage from './pages/ContestPage';
 import Leaderboard from './pages/Leaderboard';
 
+import { NotificationProvider } from './context/NotificationContext';
+
 function App() {
   return (
-    <BrowserRouter>
+    <NotificationProvider>
+      <BrowserRouter>
       <div className="min-h-screen bg-skin-base text-skin-text transition-colors duration-500">
         <ThemeLamp />
         <Routes>
@@ -27,6 +30,7 @@ function App() {
         </Routes>
       </div>
     </BrowserRouter>
+    </NotificationProvider>
   );
 }
 

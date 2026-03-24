@@ -4,7 +4,8 @@ import Navbar from '../components/Navbar';
 import ContestSidebar from '../components/ContestSidebar';
 import QuickWrite from '../components/QuickWrite';
 import StoryModal from '../components/StoryModal';
-import Toast from '../components/Toast';
+import { useNotification } from '../context/NotificationContext';
+import ConfirmModal from '../components/ConfirmModal';
 import RankUpgradeModal from '../components/RankUpgradeModal';
 import UserListModal from '../components/UserListModal';
 
@@ -30,7 +31,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedStoryId, setSelectedStoryId] = useState(null);
-  const [toast, setToast] = useState(null);
+  const { showNotification } = useNotification();
   const [openMenuId, setOpenMenuId] = useState(null);
   const [userSavedStories, setUserSavedStories] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -39,6 +40,7 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [filterGenre, setFilterGenre] = useState('All Genres');
   const [showRankUpgrade, setShowRankUpgrade] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, storyId: null });
 
   // Liker State
   const [showLikersModal, setShowLikersModal] = useState(false);
@@ -162,18 +164,22 @@ const Dashboard = () => {
       if (res.ok) {
         const data = await res.json();
         setUserSavedStories(data.savedStories);
-        setToast({
-          message: data.isSaved ? 'Story saved' : 'Story removed from saves',
-          type: 'success'
-        });
+        showNotification(
+          data.isSaved ? 'Story saved' : 'Story removed from saves',
+          'success'
+        );
       }
     } catch (err) {
       console.error("Error saving story:", err);
     }
   };
 
-  const handleDelete = async (storyId) => {
-    if (!window.confirm("Are you sure you want to delete this story?")) return;
+  const handleDelete = (storyId) => {
+    setConfirmModal({ isOpen: true, storyId });
+  };
+
+  const confirmDelete = async () => {
+    const storyId = confirmModal.storyId;
     if (!token) return navigate('/login');
     const cleanToken = token.replace(/^"|"$/g, '');
 
@@ -185,14 +191,16 @@ const Dashboard = () => {
 
       if (res.ok) {
         setStories(stories.filter(s => s._id !== storyId));
-        setToast({ message: 'Story deleted successfully', type: 'success' });
+        showNotification('Story deleted successfully', 'success');
       } else {
         const data = await res.json();
-        setToast({ message: data.msg || 'Failed to delete story', type: 'error' });
+        showNotification(data.msg || 'Failed to delete story', 'error');
       }
     } catch (err) {
       console.error("Error deleting story:", err);
-      setToast({ message: 'Error deleting story', type: 'error' });
+      showNotification('Error deleting story', 'error');
+    } finally {
+      setConfirmModal({ isOpen: false, storyId: null });
     }
   };
 
@@ -201,7 +209,7 @@ const Dashboard = () => {
     let rawToken = localStorage.getItem('token');
 
     if (!rawToken) {
-      alert("You are not logged in!");
+      showNotification("You are not logged in!", "error");
       return;
     }
 
@@ -223,7 +231,7 @@ const Dashboard = () => {
 
       if (res.status === 401 || res.status === 403) {
         console.error("Token rejected by server.");
-        alert("Session expired. Please log in again.");
+        showNotification("Session expired. Please log in again.", "error");
         localStorage.removeItem('token');
         navigate('/login');
         return;
@@ -246,7 +254,7 @@ const Dashboard = () => {
 
         // Show toast only when unliking
         if (wasLiked) {
-          setToast({ message: 'Upvote removed', type: 'info' });
+          showNotification('Upvote removed', 'info');
         }
       } else {
         const errData = await res.json();
@@ -279,9 +287,10 @@ const Dashboard = () => {
   //check if liked
   const isLiked = (upvotes) => {
     if (!upvotes || !currentUserId) return false;
-
-    // Force both IDs to strings before comparing
-    return upvotes.some(id => String(id) === String(currentUserId));
+    return upvotes.some(id => {
+      const compareId = id._id ? String(id._id) : String(id);
+      return compareId === String(currentUserId);
+    });
   };
 
   // Stop rendering if no token
@@ -519,9 +528,10 @@ const Dashboard = () => {
                                 strokeWidth={1.5}
                                 stroke="currentColor"
                                 className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isLiked(story.upvotes)
-                                  ? "fill-skin-primary text-skin-primary scale-110"
-                                  : "fill-none text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
+                                  ? "text-skin-primary scale-110"
+                                  : "text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
                                   }`}
+                                fill={isLiked(story.upvotes) ? "currentColor" : "none"}
                               >
                                 <path
                                   strokeLinecap="round"
@@ -596,7 +606,6 @@ const Dashboard = () => {
         <RankUpgradeModal onClose={() => setShowRankUpgrade(false)} />
       )}
 
-      {/* Likers Modal */}
       <UserListModal
         isOpen={showLikersModal}
         onClose={() => setShowLikersModal(false)}
@@ -605,14 +614,13 @@ const Dashboard = () => {
         loading={likersLoading}
       />
 
-      {/* Toast Notification */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title="Delete Story?"
+        message="Are you sure you want to permanently delete this story? This action cannot be undone."
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmModal({ isOpen: false, storyId: null })}
+      />
     </div>
   );
 };

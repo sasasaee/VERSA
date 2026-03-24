@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNotification } from '../context/NotificationContext';
 
 const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
   const [expanded, setExpanded] = useState(false);
@@ -6,6 +7,7 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { showNotification } = useNotification();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -21,17 +23,17 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
 
   const handleSubmit = async () => {
     let rawToken = localStorage.getItem('token');
-    if (!rawToken) return alert("Please login first");
+    if (!rawToken) return showNotification("Please login first", "error");
 
     // Clean token- removes extra quotes if present
     const token = rawToken.replace(/^"|"$/g, '');
 
     if (!formData.title.trim() || !formData.content.trim()) {
-      return alert("Please fill in both the title and the story content.");
+      return showNotification("Please fill in both the title and the story content.", "error");
     }
 
     if (getWordCount(formData.content) > 200) {
-      return alert("Story content cannot exceed 200 words.");
+      return showNotification("Story content cannot exceed 200 words.", "error");
     }
 
     setLoading(true);
@@ -53,6 +55,7 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
       if (res.ok) {
         const responseData = await res.json();
         onStoryPosted(responseData); // Update feed instantly
+        showNotification("Story Posted!", "success");
 
         if (responseData.rankUpgraded && onRankUpgrade) {
           onRankUpgrade();
@@ -64,11 +67,11 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
         setExpanded(false); // Close box
       } else {
         const errData = await res.json();
-        alert(`Failed to post: ${errData.msg || 'Unknown error'}`);
+        showNotification(`Failed to post: ${errData.msg || 'Unknown error'}`, "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Network error. Please make sure the backend is running.");
+      showNotification("Network error. Please make sure the backend is running.", "error");
     } finally {
       setLoading(false);
     }

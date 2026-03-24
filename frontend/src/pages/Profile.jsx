@@ -4,7 +4,8 @@ import axios from 'axios';
 import Navbar from '../components/Navbar';
 import SortDropdown from '../components/SortDropdown';
 import StoryModal from '../components/StoryModal';
-import Toast from '../components/Toast';
+import { useNotification } from '../context/NotificationContext';
+import ConfirmModal from '../components/ConfirmModal';
 import UserListModal from '../components/UserListModal';
 
 const Profile = () => {
@@ -17,8 +18,8 @@ const Profile = () => {
         bio: ''
     });
     const [uploading, setUploading] = useState(false);
-
-    const [toast, setToast] = useState(null);
+    const { showNotification } = useNotification();
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, storyId: null });
     const [openMenuId, setOpenMenuId] = useState(null);
     const [userSavedStories, setUserSavedStories] = useState([]);
     const [stories, setStories] = useState([]);
@@ -132,13 +133,13 @@ const Profile = () => {
             });
             setIsFollowing(res.data.isFollowing);
             setFollowersCount(res.data.followersCount);
-            setToast({
-                message: res.data.isFollowing ? `You are now following ${user.username}` : `Unfollowed ${user.username}`,
-                type: 'success'
-            });
+            showNotification(
+                res.data.isFollowing ? `You are now following ${user.username}` : `Unfollowed ${user.username}`,
+                'success'
+            );
         } catch (err) {
             console.error("Follow error:", err);
-            setToast({ message: 'Error updating follow status', type: 'error' });
+            showNotification('Error updating follow status', 'error');
         } finally {
             setFollowLoading(false);
         }
@@ -310,18 +311,26 @@ const Profile = () => {
                     setSavedStoriesData(prev => prev.filter(s => s._id !== storyId));
                 }
 
-                setToast({
-                    message: res.data.isSaved ? 'Story saved' : 'Story removed from saves',
-                    type: 'success'
-                });
+                showNotification(
+                    res.data.isSaved ? 'Story saved' : 'Story removed from saves',
+                    'success'
+                );
             }
         } catch (err) {
             console.error("Error saving story:", err);
+            showNotification('Error saving story', 'error');
         }
     };
 
-    const handleDelete = async (storyId) => {
-        if (!window.confirm("Are you sure you want to delete this story?")) return;
+    const handleDelete = (storyId) => {
+        setConfirmModal({
+            isOpen: true,
+            storyId
+        });
+    };
+
+    const confirmDeleteStory = async () => {
+        const storyId = confirmModal.storyId;
         const token = getCleanToken();
         if (!token) return navigate('/login');
 
@@ -333,14 +342,16 @@ const Profile = () => {
 
             if (res.ok) {
                 setStories(stories.filter(s => s._id !== storyId));
-                setToast({ message: 'Story deleted successfully', type: 'success' });
+                showNotification('Story deleted successfully', 'success');
             } else {
                 const data = await res.json();
-                setToast({ message: data.msg || 'Failed to delete story', type: 'error' });
+                showNotification(data.msg || 'Failed to delete story', 'error');
             }
         } catch (err) {
             console.error("Error deleting story:", err);
-            setToast({ message: 'Error deleting story', type: 'error' });
+            showNotification('Error deleting story', 'error');
+        } finally {
+            setConfirmModal({ isOpen: false, storyId: null });
         }
     };
 
@@ -668,23 +679,23 @@ const Profile = () => {
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center gap-6">
-                                                              <div 
-                                                                  className="flex items-center gap-1 cursor-pointer hover:bg-skin-primary/5 px-1.5 py-0.5 rounded-full transition-colors"
-                                                                  onClick={(e) => {
-                                                                      e.stopPropagation();
-                                                                      fetchContestSubmissionLikers(submission._id);
-                                                                  }}
-                                                                  title="See who voted for this entry"
-                                                              >
-                                                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-skin-primary">
-                                                                      <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-                                                                  </svg>
-                                                                  <span className="text-sm font-bold text-skin-primary px-0.5">{submission.votes?.length || 0}</span>
-                                                              </div>
-                                                          </div>
-                                                      </div>
-                                                  );
-                                              })}
+                                                            <div
+                                                                className="flex items-center gap-1 cursor-pointer hover:bg-skin-primary/5 px-1.5 py-0.5 rounded-full transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    fetchContestSubmissionLikers(submission._id);
+                                                                }}
+                                                                title="See who voted for this entry"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" fill={submission.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(currentUserId)) ? "currentColor" : "none"} className="w-4 h-4 text-skin-primary">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                                                </svg>
+                                                                <span className="text-sm font-bold text-skin-primary px-0.5">{submission.votes?.length || 0}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
@@ -773,7 +784,7 @@ const Profile = () => {
                                                             <span className="text-[10px] text-skin-muted uppercase font-bold tracking-tight">Segments</span>
                                                         </div>
 
-                                                        <div 
+                                                        <div
                                                             className="flex items-center gap-0.5 cursor-pointer hover:bg-skin-primary/5 px-1 py-0.5 rounded-full transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -781,8 +792,8 @@ const Profile = () => {
                                                             }}
                                                             title="See who liked this story"
                                                         >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-skin-secondary">
-                                                                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" fill={story.upvotes?.some(uid => (uid._id ? String(uid._id) : String(uid)) === String(currentUserId)) ? "currentColor" : "none"} className="w-4 h-4 text-skin-secondary">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                                                             </svg>
                                                             <span className="text-sm font-bold text-skin-secondary px-0.5">{story.upvotes?.length || 0}</span>
                                                         </div>
@@ -851,14 +862,13 @@ const Profile = () => {
                     loading={likersLoading}
                 />
 
-                {/* Toast Notification */}
-                {toast && (
-                    <Toast
-                        message={toast.message}
-                        type={toast.type}
-                        onClose={() => setToast(null)}
-                    />
-                )}
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title="Delete Story?"
+                message="Are you sure you want to permanently delete this story? This action cannot be undone."
+                onConfirm={confirmDeleteStory}
+                onCancel={() => setConfirmModal({ isOpen: false, storyId: null })}
+            />
             </div>
         </div>
     );
