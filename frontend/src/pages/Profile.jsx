@@ -28,6 +28,8 @@ const Profile = () => {
     const [filterGenre, setFilterGenre] = useState('All Genres');
     const [savedStoriesData, setSavedStoriesData] = useState([]);
     const [savedSegmentsData, setSavedSegmentsData] = useState([]);
+    const [contestSubmissions, setContestSubmissions] = useState([]);
+    const [contestSubmissionsLoading, setContestSubmissionsLoading] = useState(false);
 
     // Follower State
     const [isFollowing, setIsFollowing] = useState(false);
@@ -203,9 +205,29 @@ const Profile = () => {
         }
     };
 
+    const fetchUserContestSubmissions = async () => {
+        try {
+            setContestSubmissionsLoading(true);
+            const token = getCleanToken();
+            const userIdToFetch = id || currentUserId;
+            if (userIdToFetch) {
+                const res = await axios.get(`http://localhost:5000/api/contests/user/${userIdToFetch}/submissions`, {
+                    headers: { 'x-auth-token': token }
+                });
+                setContestSubmissions(res.data);
+            }
+            setContestSubmissionsLoading(false);
+        } catch (err) {
+            console.error("Error fetching contest submissions:", err);
+            setContestSubmissionsLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (activeStoryTab === 'saved') {
             fetchSavedItems();
+        } else if (activeStoryTab === 'contest-submissions') {
+            fetchUserContestSubmissions();
         }
     }, [activeStoryTab]);
 
@@ -436,8 +458,8 @@ const Profile = () => {
                                                     onClick={handleFollow}
                                                     disabled={followLoading}
                                                     className={`px-8 py-2.5 rounded-full font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 ${isFollowing
-                                                            ? 'bg-skin-muted/20 text-skin-text hover:bg-red-500/10 hover:text-red-500 border border-skin-muted/30'
-                                                            : 'bg-skin-primary text-skin-on-primary hover:brightness-110'
+                                                        ? 'bg-skin-muted/20 text-skin-text hover:bg-red-500/10 hover:text-red-500 border border-skin-muted/30'
+                                                        : 'bg-skin-primary text-skin-on-primary hover:brightness-110'
                                                         }`}
                                                 >
                                                     {followLoading ? (
@@ -507,6 +529,13 @@ const Profile = () => {
                                     Contributions
                                     {activeStoryTab === 'contributions' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
                                 </button>
+                                <button
+                                    onClick={() => setActiveStoryTab('contest-submissions')}
+                                    className={`pb-3 text-sm font-bold uppercase tracking-widest transition-all relative ${activeStoryTab === 'contest-submissions' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+                                >
+                                    Contest Submissions
+                                    {activeStoryTab === 'contest-submissions' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
+                                </button>
 
                                 {/* Only show Saved tab on own profile */}
                                 {isOwnProfile && (
@@ -535,9 +564,68 @@ const Profile = () => {
                                     <div className="animate-spin w-6 h-6 border-2 border-skin-primary border-t-transparent rounded-full mb-2"></div>
                                     Loading content...
                                 </div>
-                            ) : (itemsToDisplay.length === 0 && (activeStoryTab !== 'saved' || savedSegmentsData.length === 0)) ? (
+                            ) : (itemsToDisplay.length === 0 && (activeStoryTab !== 'saved' || savedSegmentsData.length === 0) && activeStoryTab !== 'contest-submissions') ? (
                                 <div className="col-span-full py-20 text-center bg-skin-muted/5 rounded-3xl border border-dashed border-skin-muted/30">
                                     <p className="text-skin-muted font-serif italic text-lg">No content found in this category.</p>
+                                </div>
+                            ) : activeStoryTab === 'contest-submissions' ? (
+                                <div className="col-span-full space-y-4">
+                                    {contestSubmissionsLoading ? (
+                                        <div className="py-20 text-center text-skin-muted flex flex-col items-center">
+                                            <div className="animate-spin w-6 h-6 border-2 border-skin-primary border-t-transparent rounded-full mb-2"></div>
+                                            Loading submissions...
+                                        </div>
+                                    ) : contestSubmissions.length === 0 ? (
+                                        <div className="py-20 text-center bg-skin-muted/5 rounded-3xl border border-dashed border-skin-muted/30">
+                                            <p className="text-skin-muted font-serif italic text-lg">No contest submissions yet.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {contestSubmissions.map(submission => {
+                                                const now = new Date();
+                                                const deadline = new Date(submission.contest.deadline);
+                                                const votingDeadline = new Date(submission.contest.votingDeadline);
+
+                                                let status = "Ended";
+                                                let statusColor = "text-skin-muted bg-skin-muted/10";
+
+                                                if (now < deadline) {
+                                                    status = "Active";
+                                                    statusColor = "text-green-500 bg-green-500/10 border-green-500/20";
+                                                } else if (now < votingDeadline) {
+                                                    status = "Voting";
+                                                    statusColor = "text-skin-primary bg-skin-primary/10 border-skin-primary/20";
+                                                }
+
+                                                return (
+                                                    <div key={submission._id} className="bg-skin-card p-6 rounded-2xl border border-skin-muted/10 hover:border-skin-primary/30 transition-all">
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <div>
+                                                                <h4 className="text-lg font-bold text-skin-primary">{submission.contest.title}</h4>
+                                                                <p className="text-xs text-skin-muted font-medium mt-1">Submitted {new Date(submission.createdAt).toLocaleDateString()}</p>
+                                                            </div>
+                                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${statusColor}`}>
+                                                                {status}
+                                                            </span>
+                                                        </div>
+                                                        <div className="bg-skin-base/50 p-4 rounded-xl border border-skin-muted/5 mb-4">
+                                                            <p className="text-skin-text/80 italic font-serif leading-relaxed line-clamp-3">
+                                                                "{submission.content}"
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-6">
+                                                            <div className="flex items-center gap-2">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-skin-primary">
+                                                                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                                                                </svg>
+                                                                <span className="text-sm font-bold text-skin-primary">{submission.votes?.length || 0} Votes</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <>

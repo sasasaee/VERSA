@@ -83,6 +83,19 @@ router.post('/submit', auth, async (req, res) => {
     }
 });
 
+// Get all submissions for a specific user
+router.get('/user/:userId/submissions', async (req, res) => {
+    try {
+        const submissions = await ContestSubmission.find({ user: req.params.userId })
+            .populate('contest', 'title active deadline votingDeadline')
+            .sort({ createdAt: -1 });
+        res.json(submissions);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Get all submissions for a contest
 router.get('/:contestId/submissions', async (req, res) => {
     try {
