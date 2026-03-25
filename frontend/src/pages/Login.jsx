@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import Toast from '../components/Toast';
+import { useNotification } from '../context/NotificationContext';
 import FlowingPetals from '../components/FlowingPetals';
 
 const Login = () => {
@@ -9,7 +9,7 @@ const Login = () => {
     email: '',
     password: ''
   });
-  const [toast, setToast] = useState(null);
+  const { showNotification } = useNotification();
 
   const navigate = useNavigate();
 
@@ -33,17 +33,17 @@ const Login = () => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
 
-        setToast({ message: '✓ Login Successful!', type: 'success' });
+        showNotification('Login Successful!', 'success');
 
         setTimeout(() => {
           navigate('/');
         }, 1500);
       } else {
-        setToast({ message: data.message || 'Login Failed', type: 'error' });
+        showNotification(data.message || 'Login Failed', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      setToast({ message: 'Server Error', type: 'error' });
+      showNotification('Server Error', 'error');
     }
   };
 
@@ -102,15 +102,6 @@ const Login = () => {
           </div>
         </form>
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 };

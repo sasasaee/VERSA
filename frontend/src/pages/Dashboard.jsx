@@ -4,8 +4,10 @@ import Navbar from '../components/Navbar';
 import ContestSidebar from '../components/ContestSidebar';
 import QuickWrite from '../components/QuickWrite';
 import StoryModal from '../components/StoryModal';
-import Toast from '../components/Toast';
+import { useNotification } from '../context/NotificationContext';
+import ConfirmModal from '../components/ConfirmModal';
 import RankUpgradeModal from '../components/RankUpgradeModal';
+import UserListModal from '../components/UserListModal';
 
 // Get current user ID to check if we liked the story
 const getUserIdFromToken = (token) => {
@@ -29,7 +31,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('feed');
   const [selectedStoryId, setSelectedStoryId] = useState(null);
-  const [toast, setToast] = useState(null);
+  const { showNotification } = useNotification();
   const [openMenuId, setOpenMenuId] = useState(null);
   const [userSavedStories, setUserSavedStories] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -38,6 +40,12 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [filterGenre, setFilterGenre] = useState('All Genres');
   const [showRankUpgrade, setShowRankUpgrade] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, storyId: null });
+
+  // Liker State
+  const [showLikersModal, setShowLikersModal] = useState(false);
+  const [likersList, setLikersList] = useState([]);
+  const [likersLoading, setLikersLoading] = useState(false);
 
   // Get token and User ID immediately
   const token = localStorage.getItem('token');
@@ -156,18 +164,22 @@ const Dashboard = () => {
       if (res.ok) {
         const data = await res.json();
         setUserSavedStories(data.savedStories);
-        setToast({
-          message: data.isSaved ? 'Story saved' : 'Story removed from saves',
-          type: 'success'
-        });
+        showNotification(
+          data.isSaved ? 'Story saved' : 'Story removed from saves',
+          'success'
+        );
       }
     } catch (err) {
       console.error("Error saving story:", err);
     }
   };
 
-  const handleDelete = async (storyId) => {
-    if (!window.confirm("Are you sure you want to delete this story?")) return;
+  const handleDelete = (storyId) => {
+    setConfirmModal({ isOpen: true, storyId });
+  };
+
+  const confirmDelete = async () => {
+    const storyId = confirmModal.storyId;
     if (!token) return navigate('/login');
     const cleanToken = token.replace(/^"|"$/g, '');
 
@@ -179,14 +191,16 @@ const Dashboard = () => {
 
       if (res.ok) {
         setStories(stories.filter(s => s._id !== storyId));
-        setToast({ message: 'Story deleted successfully', type: 'success' });
+        showNotification('Story deleted successfully', 'success');
       } else {
         const data = await res.json();
-        setToast({ message: data.msg || 'Failed to delete story', type: 'error' });
+        showNotification(data.msg || 'Failed to delete story', 'error');
       }
     } catch (err) {
       console.error("Error deleting story:", err);
-      setToast({ message: 'Error deleting story', type: 'error' });
+      showNotification('Error deleting story', 'error');
+    } finally {
+      setConfirmModal({ isOpen: false, storyId: null });
     }
   };
 
@@ -195,7 +209,7 @@ const Dashboard = () => {
     let rawToken = localStorage.getItem('token');
 
     if (!rawToken) {
-      alert("You are not logged in!");
+      showNotification("You are not logged in!", "error");
       return;
     }
 
@@ -217,7 +231,7 @@ const Dashboard = () => {
 
       if (res.status === 401 || res.status === 403) {
         console.error("Token rejected by server.");
-        alert("Session expired. Please log in again.");
+        showNotification("Session expired. Please log in again.", "error");
         localStorage.removeItem('token');
         navigate('/login');
         return;
@@ -240,7 +254,7 @@ const Dashboard = () => {
 
         // Show toast only when unliking
         if (wasLiked) {
-          setToast({ message: 'Upvote removed', type: 'info' });
+          showNotification('Upvote removed', 'info');
         }
       } else {
         const errData = await res.json();
@@ -251,12 +265,32 @@ const Dashboard = () => {
     }
   };
 
+  const fetchStoryLikers = async (storyId) => {
+    try {
+      setLikersLoading(true);
+      setShowLikersModal(true);
+      const cleanToken = token.replace(/^"|"$/g, '');
+      const res = await fetch(`http://localhost:5000/api/stories/${storyId}/likers`, {
+        headers: { 'x-auth-token': cleanToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLikersList(data);
+      }
+    } catch (err) {
+      console.error("Error fetching story likers:", err);
+    } finally {
+      setLikersLoading(false);
+    }
+  };
+
   //check if liked
   const isLiked = (upvotes) => {
     if (!upvotes || !currentUserId) return false;
-
-    // Force both IDs to strings before comparing
-    return upvotes.some(id => String(id) === String(currentUserId));
+    return upvotes.some(id => {
+      const compareId = id._id ? String(id._id) : String(id);
+      return compareId === String(currentUserId);
+    });
   };
 
   // Stop rendering if no token
@@ -460,60 +494,66 @@ const Dashboard = () => {
 
                     {/* Action buttons */}
                     <div className="flex items-center justify-between border-t border-skin-muted/20 pt-4 relative">
-                      <div className="flex items-center gap-6">
-                        {/* BOOK UPVOTE BUTTON */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (String(story.author?._id) === String(currentUserId)) return;
-                            handleLike(story._id);
-                          }}
-                          disabled={String(story.author?._id) === String(currentUserId)}
-                          className={`flex items-center gap-2 group transition-all focus:outline-none ${String(story.author?._id) === String(currentUserId)
-                            ? 'opacity-50 cursor-not-allowed'
-                            : ''
-                            }`}
-                          title={
-                            String(story.author?._id) === String(currentUserId)
-                              ? "You cannot upvote your own story"
-                              : "Like this story"
-                          }
-                        >
-                          <div className="relative">
-                            <div
-                              className={`absolute inset-0 bg-skin-secondary/20 rounded-full blur-md transition-opacity duration-500 ${isLiked(story.upvotes)
-                                ? "opacity-100 scale-150"
-                                : "opacity-0 scale-0"
-                                }`}
-                            />
-
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isLiked(story.upvotes)
-                                ? "fill-skin-primary text-skin-primary scale-110"
-                                : "fill-none text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
-                                }`}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
-                              />
-                            </svg>
-                          </div>
-
-                          <span
-                            className={`font-medium text-sm transition-colors duration-300 ${isLiked(story.upvotes)
-                              ? "text-skin-primary font-bold"
-                              : "text-skin-muted"
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          {/* BOOK UPVOTE BUTTON (Icon Only) */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (String(story.author?._id) === String(currentUserId)) return;
+                              handleLike(story._id);
+                            }}
+                            disabled={String(story.author?._id) === String(currentUserId)}
+                            className={`group transition-all focus:outline-none ${String(story.author?._id) === String(currentUserId)
+                              ? 'opacity-50 cursor-not-allowed'
+                              : ''
                               }`}
+                            title={
+                              String(story.author?._id) === String(currentUserId)
+                                ? "You cannot upvote your own story"
+                                : "Like this story"
+                            }
+                          >
+                            <div className="relative">
+                              <div
+                                className={`absolute inset-0 bg-skin-secondary/20 rounded-full blur-md transition-opacity duration-500 ${isLiked(story.upvotes)
+                                  ? "opacity-100 scale-150"
+                                  : "opacity-0 scale-0"
+                                  }`}
+                              />
+
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className={`relative z-10 w-6 h-6 transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${isLiked(story.upvotes)
+                                  ? "text-skin-primary scale-110"
+                                  : "text-skin-muted group-hover:text-skin-primary group-hover:scale-105"
+                                  }`}
+                                fill={isLiked(story.upvotes) ? "currentColor" : "none"}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
+                                />
+                              </svg>
+                            </div>
+                          </button>
+
+                          {/* Likers Count - Clickable for everyone */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fetchStoryLikers(story._id);
+                            }}
+                            className={`font-bold text-sm transition-colors duration-300 hover:text-skin-secondary px-0.5 ${isLiked(story.upvotes) ? "text-skin-primary" : "text-skin-muted"}`}
+                            title="See who liked this story"
                           >
                             {story.upvotes?.length || 0}
-                          </span>
-                        </button>
+                          </button>
+                        </div>
 
                         {/* Save Story Toggle (Quick access) */}
                         <button
@@ -566,14 +606,21 @@ const Dashboard = () => {
         <RankUpgradeModal onClose={() => setShowRankUpgrade(false)} />
       )}
 
-      {/* Toast Notification */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      <UserListModal
+        isOpen={showLikersModal}
+        onClose={() => setShowLikersModal(false)}
+        title="Liked By"
+        users={likersList}
+        loading={likersLoading}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title="Delete Story?"
+        message="Are you sure you want to permanently delete this story? This action cannot be undone."
+        onConfirm={confirmDelete}
+        onCancel={() => setConfirmModal({ isOpen: false, storyId: null })}
+      />
     </div>
   );
 };

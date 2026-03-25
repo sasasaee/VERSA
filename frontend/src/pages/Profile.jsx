@@ -4,7 +4,9 @@ import axios from 'axios';
 import Navbar from '../components/Navbar';
 import SortDropdown from '../components/SortDropdown';
 import StoryModal from '../components/StoryModal';
-import Toast from '../components/Toast';
+import { useNotification } from '../context/NotificationContext';
+import ConfirmModal from '../components/ConfirmModal';
+import UserListModal from '../components/UserListModal';
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -16,8 +18,8 @@ const Profile = () => {
         bio: ''
     });
     const [uploading, setUploading] = useState(false);
-
-    const [toast, setToast] = useState(null);
+    const { showNotification } = useNotification();
+    const [confirmModal, setConfirmModal] = useState({ isOpen: false, storyId: null });
     const [openMenuId, setOpenMenuId] = useState(null);
     const [userSavedStories, setUserSavedStories] = useState([]);
     const [stories, setStories] = useState([]);
@@ -28,6 +30,8 @@ const Profile = () => {
     const [filterGenre, setFilterGenre] = useState('All Genres');
     const [savedStoriesData, setSavedStoriesData] = useState([]);
     const [savedSegmentsData, setSavedSegmentsData] = useState([]);
+    const [contestSubmissions, setContestSubmissions] = useState([]);
+    const [contestSubmissionsLoading, setContestSubmissionsLoading] = useState(false);
 
     // Follower State
     const [isFollowing, setIsFollowing] = useState(false);
@@ -38,6 +42,11 @@ const Profile = () => {
     const [showFollowingModal, setShowFollowingModal] = useState(false);
     const [followersList, setFollowersList] = useState([]);
     const [followingList, setFollowingList] = useState([]);
+
+    // Liker State
+    const [showLikersModal, setShowLikersModal] = useState(false);
+    const [likersList, setLikersList] = useState([]);
+    const [likersLoading, setLikersLoading] = useState(false);
 
     const { id } = useParams(); // Get ID from URL
     const navigate = useNavigate();
@@ -124,13 +133,13 @@ const Profile = () => {
             });
             setIsFollowing(res.data.isFollowing);
             setFollowersCount(res.data.followersCount);
-            setToast({
-                message: res.data.isFollowing ? `You are now following ${user.username}` : `Unfollowed ${user.username}`,
-                type: 'success'
-            });
+            showNotification(
+                res.data.isFollowing ? `You are now following ${user.username}` : `Unfollowed ${user.username}`,
+                'success'
+            );
         } catch (err) {
             console.error("Follow error:", err);
-            setToast({ message: 'Error updating follow status', type: 'error' });
+            showNotification('Error updating follow status', 'error');
         } finally {
             setFollowLoading(false);
         }
@@ -203,9 +212,77 @@ const Profile = () => {
         }
     };
 
+    const fetchUserContestSubmissions = async () => {
+        try {
+            setContestSubmissionsLoading(true);
+            const token = getCleanToken();
+            const userIdToFetch = id || currentUserId;
+            if (userIdToFetch) {
+                const res = await axios.get(`http://localhost:5000/api/contests/user/${userIdToFetch}/submissions`, {
+                    headers: { 'x-auth-token': token }
+                });
+                setContestSubmissions(res.data);
+            }
+            setContestSubmissionsLoading(false);
+        } catch (err) {
+            console.error("Error fetching contest submissions:", err);
+            setContestSubmissionsLoading(false);
+        }
+    };
+
+    const fetchStoryLikers = async (storyId) => {
+        try {
+            setLikersLoading(true);
+            setShowLikersModal(true);
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/stories/${storyId}/likers`, {
+                headers: { 'x-auth-token': token }
+            });
+            setLikersList(res.data);
+            setLikersLoading(false);
+        } catch (err) {
+            console.error("Error fetching story likers:", err);
+            setLikersLoading(false);
+        }
+    };
+
+    const fetchSegmentLikers = async (storyId, segmentId) => {
+        try {
+            setLikersLoading(true);
+            setShowLikersModal(true);
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/stories/${storyId}/segment/${segmentId}/likers`, {
+                headers: { 'x-auth-token': token }
+            });
+            setLikersList(res.data);
+            setLikersLoading(false);
+        } catch (err) {
+            console.error("Error fetching segment likers:", err);
+            setLikersLoading(false);
+        }
+    };
+
+    const fetchContestSubmissionLikers = async (submissionId) => {
+        try {
+            setLikersLoading(true);
+            setShowLikersModal(true);
+            const token = getCleanToken();
+            const res = await axios.get(`http://localhost:5000/api/contests/submission/${submissionId}/likers`, {
+                headers: { 'x-auth-token': token }
+            });
+            setLikersList(res.data);
+            setLikersLoading(false);
+        } catch (err) {
+            console.error("Error fetching contest submission likers:", err);
+            setLikersLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (activeStoryTab === 'saved') {
             fetchSavedItems();
+        } else if (activeStoryTab === 'contest-submissions') {
+            fetchUserContestSubmissions();
         }
     }, [activeStoryTab]);
 
@@ -234,18 +311,26 @@ const Profile = () => {
                     setSavedStoriesData(prev => prev.filter(s => s._id !== storyId));
                 }
 
-                setToast({
-                    message: res.data.isSaved ? 'Story saved' : 'Story removed from saves',
-                    type: 'success'
-                });
+                showNotification(
+                    res.data.isSaved ? 'Story saved' : 'Story removed from saves',
+                    'success'
+                );
             }
         } catch (err) {
             console.error("Error saving story:", err);
+            showNotification('Error saving story', 'error');
         }
     };
 
-    const handleDelete = async (storyId) => {
-        if (!window.confirm("Are you sure you want to delete this story?")) return;
+    const handleDelete = (storyId) => {
+        setConfirmModal({
+            isOpen: true,
+            storyId
+        });
+    };
+
+    const confirmDeleteStory = async () => {
+        const storyId = confirmModal.storyId;
         const token = getCleanToken();
         if (!token) return navigate('/login');
 
@@ -257,14 +342,16 @@ const Profile = () => {
 
             if (res.ok) {
                 setStories(stories.filter(s => s._id !== storyId));
-                setToast({ message: 'Story deleted successfully', type: 'success' });
+                showNotification('Story deleted successfully', 'success');
             } else {
                 const data = await res.json();
-                setToast({ message: data.msg || 'Failed to delete story', type: 'error' });
+                showNotification(data.msg || 'Failed to delete story', 'error');
             }
         } catch (err) {
             console.error("Error deleting story:", err);
-            setToast({ message: 'Error deleting story', type: 'error' });
+            showNotification('Error deleting story', 'error');
+        } finally {
+            setConfirmModal({ isOpen: false, storyId: null });
         }
     };
 
@@ -436,8 +523,8 @@ const Profile = () => {
                                                     onClick={handleFollow}
                                                     disabled={followLoading}
                                                     className={`px-8 py-2.5 rounded-full font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 ${isFollowing
-                                                            ? 'bg-skin-muted/20 text-skin-text hover:bg-red-500/10 hover:text-red-500 border border-skin-muted/30'
-                                                            : 'bg-skin-primary text-skin-on-primary hover:brightness-110'
+                                                        ? 'bg-skin-muted/20 text-skin-text hover:bg-red-500/10 hover:text-red-500 border border-skin-muted/30'
+                                                        : 'bg-skin-primary text-skin-on-primary hover:brightness-110'
                                                         }`}
                                                 >
                                                     {followLoading ? (
@@ -507,6 +594,13 @@ const Profile = () => {
                                     Contributions
                                     {activeStoryTab === 'contributions' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
                                 </button>
+                                <button
+                                    onClick={() => setActiveStoryTab('contest-submissions')}
+                                    className={`pb-3 text-sm font-bold uppercase tracking-widest transition-all relative ${activeStoryTab === 'contest-submissions' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+                                >
+                                    Contest Submissions
+                                    {activeStoryTab === 'contest-submissions' && <div className="absolute bottom-0 left-0 w-full h-1 bg-skin-primary rounded-t-full"></div>}
+                                </button>
 
                                 {/* Only show Saved tab on own profile */}
                                 {isOwnProfile && (
@@ -535,9 +629,75 @@ const Profile = () => {
                                     <div className="animate-spin w-6 h-6 border-2 border-skin-primary border-t-transparent rounded-full mb-2"></div>
                                     Loading content...
                                 </div>
-                            ) : (itemsToDisplay.length === 0 && (activeStoryTab !== 'saved' || savedSegmentsData.length === 0)) ? (
+                            ) : (itemsToDisplay.length === 0 && (activeStoryTab !== 'saved' || savedSegmentsData.length === 0) && activeStoryTab !== 'contest-submissions') ? (
                                 <div className="col-span-full py-20 text-center bg-skin-muted/5 rounded-3xl border border-dashed border-skin-muted/30">
                                     <p className="text-skin-muted font-serif italic text-lg">No content found in this category.</p>
+                                </div>
+                            ) : activeStoryTab === 'contest-submissions' ? (
+                                <div className="col-span-full space-y-4">
+                                    {contestSubmissionsLoading ? (
+                                        <div className="py-20 text-center text-skin-muted flex flex-col items-center">
+                                            <div className="animate-spin w-6 h-6 border-2 border-skin-primary border-t-transparent rounded-full mb-2"></div>
+                                            Loading submissions...
+                                        </div>
+                                    ) : contestSubmissions.length === 0 ? (
+                                        <div className="py-20 text-center bg-skin-muted/5 rounded-3xl border border-dashed border-skin-muted/30">
+                                            <p className="text-skin-muted font-serif italic text-lg">No contest submissions yet.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 gap-4">
+                                            {contestSubmissions.map(submission => {
+                                                const now = new Date();
+                                                const deadline = new Date(submission.contest.deadline);
+                                                const votingDeadline = new Date(submission.contest.votingDeadline);
+
+                                                let status = "Ended";
+                                                let statusColor = "text-skin-muted bg-skin-muted/10";
+
+                                                if (now < deadline) {
+                                                    status = "Active";
+                                                    statusColor = "text-green-500 bg-green-500/10 border-green-500/20";
+                                                } else if (now < votingDeadline) {
+                                                    status = "Voting";
+                                                    statusColor = "text-skin-primary bg-skin-primary/10 border-skin-primary/20";
+                                                }
+
+                                                return (
+                                                    <div key={submission._id} className="bg-skin-card p-6 rounded-2xl border border-skin-muted/10 hover:border-skin-primary/30 transition-all">
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <div>
+                                                                <h4 className="text-lg font-bold text-skin-primary">{submission.contest.title}</h4>
+                                                                <p className="text-xs text-skin-muted font-medium mt-1">Submitted {new Date(submission.createdAt).toLocaleDateString()}</p>
+                                                            </div>
+                                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${statusColor}`}>
+                                                                {status}
+                                                            </span>
+                                                        </div>
+                                                        <div className="bg-skin-base/50 p-4 rounded-xl border border-skin-muted/5 mb-4">
+                                                            <p className="text-skin-text/80 italic font-serif leading-relaxed line-clamp-3">
+                                                                "{submission.content}"
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center gap-6">
+                                                            <div
+                                                                className="flex items-center gap-1 cursor-pointer hover:bg-skin-primary/5 px-1.5 py-0.5 rounded-full transition-colors"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    fetchContestSubmissionLikers(submission._id);
+                                                                }}
+                                                                title="See who voted for this entry"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" fill={submission.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(currentUserId)) ? "currentColor" : "none"} className="w-4 h-4 text-skin-primary">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                                                </svg>
+                                                                <span className="text-sm font-bold text-skin-primary px-0.5">{submission.votes?.length || 0}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <>
@@ -616,11 +776,27 @@ const Profile = () => {
                                                     {story.segments?.[0]?.content || "No content yet."}
                                                 </p>
                                                 <div className="flex items-center justify-between pt-2 border-t border-skin-muted/10">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-skin-primary/10 flex items-center justify-center text-[10px] text-skin-primary font-bold">
-                                                            {story.segments?.length || 0}
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-6 h-6 rounded-full bg-skin-primary/10 flex items-center justify-center text-[10px] text-skin-primary font-bold">
+                                                                {story.segments?.length || 0}
+                                                            </div>
+                                                            <span className="text-[10px] text-skin-muted uppercase font-bold tracking-tight">Segments</span>
                                                         </div>
-                                                        <span className="text-[10px] text-skin-muted uppercase font-bold tracking-tight">Segments</span>
+
+                                                        <div
+                                                            className="flex items-center gap-0.5 cursor-pointer hover:bg-skin-primary/5 px-1 py-0.5 rounded-full transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                fetchStoryLikers(story._id);
+                                                            }}
+                                                            title="See who liked this story"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" fill={story.upvotes?.some(uid => (uid._id ? String(uid._id) : String(uid)) === String(currentUserId)) ? "currentColor" : "none"} className="w-4 h-4 text-skin-secondary">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                                            </svg>
+                                                            <span className="text-sm font-bold text-skin-secondary px-0.5">{story.upvotes?.length || 0}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -665,89 +841,34 @@ const Profile = () => {
                     />
                 )}
 
-                {/* Followers/Following Modals */}
-                <FollowListModal
+                {/* Followers/Following/Likers Modals */}
+                <UserListModal
                     isOpen={showFollowersModal}
                     onClose={() => setShowFollowersModal(false)}
                     title="Followers"
                     users={followersList}
                 />
-                <FollowListModal
+                <UserListModal
                     isOpen={showFollowingModal}
                     onClose={() => setShowFollowingModal(false)}
                     title="Following"
                     users={followingList}
                 />
+                <UserListModal
+                    isOpen={showLikersModal}
+                    onClose={() => setShowLikersModal(false)}
+                    title="Liked By"
+                    users={likersList}
+                    loading={likersLoading}
+                />
 
-                {/* Toast Notification */}
-                {toast && (
-                    <Toast
-                        message={toast.message}
-                        type={toast.type}
-                        onClose={() => setToast(null)}
-                    />
-                )}
-            </div>
-        </div>
-    );
-};
-
-const FollowListModal = ({ isOpen, onClose, title, users }) => {
-    const navigate = useNavigate();
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
-            <div
-                className="bg-skin-card w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-modal-pop"
-                onClick={e => e.stopPropagation()}
-            >
-                <div className="px-6 py-4 border-b border-skin-muted/10 flex justify-between items-center bg-skin-primary/5">
-                    <h3 className="text-xl font-serif font-bold text-skin-primary">{title}</h3>
-                    <button onClick={onClose} className="p-2 hover:bg-skin-primary/10 rounded-full transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-
-                <div className="max-h-[60vh] overflow-y-auto p-4 space-y-2">
-                    {users.length === 0 ? (
-                        <div className="py-10 text-center text-skin-muted italic font-serif">
-                            No users found.
-                        </div>
-                    ) : (
-                        users.map(user => (
-                            <div
-                                key={user._id}
-                                className="flex items-center gap-4 p-3 rounded-2xl hover:bg-skin-primary/5 transition-all cursor-pointer group"
-                                onClick={() => {
-                                    onClose();
-                                    navigate(`/profile/${user._id}`);
-                                }}
-                            >
-                                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-skin-primary/10 group-hover:border-skin-primary/30 transition-colors">
-                                    {user.profilePicture ? (
-                                        <img src={user.profilePicture} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-skin-muted/10 text-skin-primary font-bold">
-                                            {user.username[0].toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <p className="font-bold text-skin-text group-hover:text-skin-primary transition-colors">{user.username}</p>
-                                    <span className="text-[10px] uppercase tracking-widest font-bold text-skin-muted">{user.rank || 'beginner'}</span>
-                                </div>
-                                <div className="text-skin-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                                        <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title="Delete Story?"
+                message="Are you sure you want to permanently delete this story? This action cannot be undone."
+                onConfirm={confirmDeleteStory}
+                onCancel={() => setConfirmModal({ isOpen: false, storyId: null })}
+            />
             </div>
         </div>
     );

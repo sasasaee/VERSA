@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import Toast from '../components/Toast';
+import { useNotification } from '../context/NotificationContext';
 import FlowingPetals from '../components/FlowingPetals';
 
 const Register = () => {
@@ -10,7 +10,7 @@ const Register = () => {
     email: '',
     password: ''
   });
-  const [toast, setToast] = useState(null);
+  const { showNotification } = useNotification();
 
   const navigate = useNavigate();
 
@@ -32,17 +32,17 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setToast({ message: '✓ Registration Successful! Redirecting to login...', type: 'success' });
+        showNotification('Registration Successful! Redirecting to login...', 'success');
 
         setTimeout(() => {
           navigate('/login');
         }, 2000);
       } else {
-        setToast({ message: data.message || 'Registration Failed', type: 'error' });
+        showNotification(data.message || 'Registration Failed', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      setToast({ message: 'Server Error. Is the backend running?', type: 'error' });
+      showNotification('Server Error. Is the backend running?', 'error');
     }
   };
 
@@ -100,15 +100,6 @@ const Register = () => {
           </div>
         </form>
       </div>
-
-      {/* Toast */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 };

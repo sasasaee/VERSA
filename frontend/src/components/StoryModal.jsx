@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Toast from './Toast';
+import { useNotification } from '../context/NotificationContext';
+import ConfirmModal from './ConfirmModal';
+import UserListModal from './UserListModal';
 
 const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
   const navigate = useNavigate();
@@ -9,7 +11,13 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [userSavedStories, setUserSavedStories] = useState([]);
   const [userSavedSegments, setUserSavedSegments] = useState([]);
-  const [toast, setToast] = useState(null);
+  const { showNotification } = useNotification();
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null, id: null });
+
+  // Liker State
+  const [showLikersModal, setShowLikersModal] = useState(false);
+  const [likersList, setLikersList] = useState([]);
+  const [likersLoading, setLikersLoading] = useState(false);
 
   // Edit state
   const [editingSegmentId, setEditingSegmentId] = useState(null);
@@ -94,7 +102,7 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
       if (res.ok) {
         const data = await res.json();
         setUserSavedStories(data.savedStories);
-        setToast({ message: data.isSaved ? 'Story saved' : 'Story removed from saves', type: 'success' });
+        showNotification(data.isSaved ? 'Story saved' : 'Story removed from saves', 'success');
       }
     } catch (err) { console.error(err); }
   };
@@ -110,13 +118,20 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
       if (res.ok) {
         const data = await res.json();
         setUserSavedSegments(data.savedSegments);
-        setToast({ message: data.isSaved ? 'Part saved' : 'Part removed from saves', type: 'success' });
+        showNotification(data.isSaved ? 'Part saved' : 'Part removed from saves', 'success');
       }
     } catch (err) { console.error(err); }
   };
 
-  const handleDeleteStory = async () => {
-    if (!window.confirm("Are you sure you want to delete this entire story?")) return;
+  const handleDeleteStory = () => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'story',
+      id: storyId
+    });
+  };
+
+  const confirmDeleteStory = async () => {
     const token = getCleanToken();
     try {
       const res = await fetch(`http://localhost:5000/api/stories/${storyId}`, {
@@ -124,17 +139,28 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
         headers: { 'x-auth-token': token }
       });
       if (res.ok) {
-        setToast({ message: 'Story deleted successfully', type: 'success' });
+        showNotification('Story deleted successfully', 'success');
         setTimeout(() => onClose(), 1500);
       } else {
         const data = await res.json();
-        setToast({ message: data.msg || 'Failed to delete', type: 'error' });
+        showNotification(data.msg || 'Failed to delete', 'error');
       }
     } catch (err) { console.error(err); }
+    finally {
+      setConfirmModal({ isOpen: false, type: null, id: null });
+    }
   };
 
-  const handleDeleteSegment = async (segmentId) => {
-    if (!window.confirm("Are you sure you want to delete this contribution?")) return;
+  const handleDeleteSegment = (segmentId) => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'segment',
+      id: segmentId
+    });
+  };
+
+  const confirmDeleteSegment = async () => {
+    const segmentId = confirmModal.id;
     const token = getCleanToken();
     try {
       const res = await fetch(`http://localhost:5000/api/stories/segment/${storyId}/${segmentId}`, {
@@ -144,12 +170,15 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
       if (res.ok) {
         const updatedStory = await res.json();
         setStory(updatedStory);
-        setToast({ message: 'Contribution removed', type: 'success' });
+        showNotification('Contribution removed', 'success');
       } else {
         const data = await res.json();
-        setToast({ message: data.msg || 'Failed to delete', type: 'error' });
+        showNotification(data.msg || 'Failed to delete', 'error');
       }
     } catch (err) { console.error(err); }
+    finally {
+      setConfirmModal({ isOpen: false, type: null, id: null });
+    }
   };
 
   const handleEditStoryStart = () => {
@@ -172,10 +201,10 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
         const updated = await res.json();
         setStory(updated);
         setIsEditingStory(false);
-        setToast({ message: 'Story updated!', type: 'success' });
+        showNotification('Story updated!', 'success');
       } else {
         const data = await res.json();
-        setToast({ message: data.msg || 'Failed to update', type: 'error' });
+        showNotification(data.msg || 'Failed to update', 'error');
       }
     } catch (err) { console.error(err); }
   };
@@ -199,10 +228,10 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
         setStory(updated);
         setEditingSegmentId(null);
         setEditingContent('');
-        setToast({ message: 'Contribution updated!', type: 'success' });
+        showNotification('Contribution updated!', 'success');
       } else {
         const data = await res.json();
-        setToast({ message: data.msg || 'Failed to update', type: 'error' });
+        showNotification(data.msg || 'Failed to update', 'error');
       }
     } catch (err) { console.error(err); }
   };
@@ -227,13 +256,32 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
         }));
       } else {
         const data = await res.json();
-        setToast({ message: data.msg, type: 'info' });
+        showNotification(data.msg, 'info');
       }
     } catch (err) { console.error(err); }
   };
 
+  const fetchSegmentLikers = async (segmentId) => {
+    try {
+      setLikersLoading(true);
+      setShowLikersModal(true);
+      const token = getCleanToken();
+      const res = await fetch(`http://localhost:5000/api/stories/${storyId}/segment/${segmentId}/likers`, {
+        headers: { 'x-auth-token': token }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLikersList(data);
+      }
+    } catch (err) {
+      console.error("Error fetching segment likers:", err);
+    } finally {
+      setLikersLoading(false);
+    }
+  };
+
   const handlePublish = async () => {
-    if (getWordCount(newSegment) > 200) return alert("Continuation cannot exceed 200 words.");
+    if (getWordCount(newSegment) > 200) return showNotification("Continuation cannot exceed 200 words.", "error");
     const token = getCleanToken();
     try {
       const res = await fetch(`http://localhost:5000/api/stories/segment/${storyId}`, {
@@ -245,12 +293,16 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
         const responseData = await res.json();
         setStory(responseData);
         setNewSegment('');
+        showNotification("Part Published!", "success");
         if (responseData.rankUpgraded && onRankUpgrade) onRankUpgrade();
       } else {
         const err = await res.json();
-        alert(err.msg);
+        showNotification(err.msg, "error");
       }
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+      console.error(error); 
+      showNotification("Server error", "error");
+    }
   };
 
   if (!story) return null;
@@ -381,10 +433,143 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
                 </div>
               </div>
             )}
+            {/* Story Starting Part (Plain Text) */}
+            {story.segments.length > 0 && (
+              <div className="relative group pb-8">
+                {editingSegmentId === String(story.segments[0]._id) ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      rows={6}
+                      className="w-full p-4 bg-skin-base border-2 border-skin-primary/20 rounded-xl text-skin-text focus:outline-none focus:border-skin-primary resize-none font-serif text-lg leading-relaxed"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditSegmentSave(story.segments[0]._id)}
+                        className="px-6 py-2 bg-skin-secondary text-white rounded-lg font-bold text-sm hover:brightness-110 transition-all shadow-lg shadow-skin-secondary/20"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => { setEditingSegmentId(null); setEditingContent(''); }}
+                        className="px-6 py-2 bg-skin-muted/20 text-skin-text rounded-lg font-bold text-sm hover:bg-skin-muted/30 transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-skin-text font-serif text-xl leading-relaxed whitespace-pre-wrap first-letter:text-6xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:text-skin-primary first-letter:font-['Dancing_Script']">
+                    {story.segments[0].content}
+                  </p>
+                )}
 
-            {/* Segments */}
-            {story.segments.map((seg, index) => (
-              <div key={index} className="bg-skin-card p-4 rounded-xl shadow-sm border border-skin-muted/10 relative group">
+                <div className="mt-6 flex items-center justify-between pt-4 border-t border-skin-muted/10">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="flex items-center gap-2 text-xs text-skin-muted font-bold uppercase tracking-wider cursor-pointer hover:text-skin-primary transition-colors"
+                      onClick={() => { onClose(); navigate(`/profile/${story.segments[0].author?._id}`); }}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-skin-primary text-skin-on-primary flex items-center justify-center overflow-hidden ring-2 ring-skin-primary/20">
+                        {story.segments[0].author?.profilePicture ? (
+                          <img src={story.segments[0].author.profilePicture} alt={story.segments[0].author.username} className="w-full h-full object-cover" />
+                        ) : (
+                          story.segments[0].author?.username?.[0] || 'A'
+                        )}
+                      </div>
+                      <span className="text-skin-text">{story.segments[0].author?.username}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {String(story.segments[0].author?._id || story.segments[0].author) !== String(currentUserId) && (
+                        <button
+                          onClick={() => handleSegmentLike(story.segments[0]._id)}
+                          className="group/like transition-all focus:outline-none"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            fill={story.segments[0].upvotes?.some(id => {
+                              const compareId = id._id ? String(id._id) : String(id);
+                              return compareId === String(currentUserId);
+                            }) ? "currentColor" : "none"}
+                            className={`w-5 h-5 transition-all duration-300 ${story.segments[0].upvotes?.some(id => {
+                              const compareId = id._id ? String(id._id) : String(id);
+                              return compareId === String(currentUserId);
+                            }) ? 'text-skin-primary scale-110' : 'text-skin-muted group-hover/like:text-skin-primary'}`}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                          </svg>
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); fetchSegmentLikers(story.segments[0]._id); }}
+                        className="text-sm font-bold text-skin-primary hover:underline"
+                      >
+                        {story.segments[0].upvotes?.length || 0}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative menu-container opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === `seg-0` ? null : `seg-0`);
+                      }}
+                      className="p-1.5 text-skin-muted hover:text-skin-primary transition-colors bg-skin-muted/5 rounded-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                      </svg>
+                    </button>
+                    {openMenuId === `seg-0` && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-skin-card border border-skin-muted/20 rounded-xl shadow-2xl z-[60] py-2 animate-fade-in text-left">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleSaveSegment(story.segments[0]._id); setOpenMenuId(null); }}
+                          className="w-full text-left px-4 py-2 text-xs text-skin-text hover:bg-skin-primary/10 transition-colors flex items-center gap-2 font-bold"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill={userSavedSegments.some(id => String(id) === String(story.segments[0]._id)) ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                          </svg>
+                          {userSavedSegments.some(id => String(id) === String(story.segments[0]._id)) ? 'Unsave Opening' : 'Save Opening'}
+                        </button>
+                        {String(story.segments[0].author?._id || story.segments[0].author) === String(currentUserId) && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEditSegmentStart(story.segments[0]); }}
+                            className="w-full text-left px-4 py-2 text-xs text-skin-text hover:bg-skin-primary/10 transition-colors flex items-center gap-2 font-bold"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                            </svg>
+                            Edit Opening
+                          </button>
+                        )}
+                        {String(story.segments[0].author?._id || story.segments[0].author) === String(currentUserId) && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteStory(); setOpenMenuId(null); }}
+                            className="w-full text-left px-4 py-2 text-xs text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2 font-bold"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                            </svg>
+                            Delete Story
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+
+            {/* Subsequential Segments */}
+            {story.segments.slice(1).map((seg, index) => (
+              <div key={index + 1} className="bg-skin-card p-4 rounded-xl shadow-sm border border-skin-muted/10 relative group">
 
                 {/* Edit Segment Form */}
                 {editingSegmentId === String(seg._id) ? (
@@ -437,33 +622,49 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
                       {seg.author?.username}
                     </div>
 
-                    {/* Segment Upvote Button */}
-                    {String(seg.author?._id || seg.author) !== String(currentUserId) && (
-                      <button
-                        onClick={() => handleSegmentLike(seg._id)}
-                        className="flex items-center gap-1 group/like transition-all focus:outline-none"
-                        title="Upvote this part"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className={`w-4 h-4 transition-all duration-300 ${seg.upvotes?.some(id => String(id) === String(currentUserId))
-                            ? 'fill-skin-primary text-skin-primary scale-110'
-                            : 'fill-none text-skin-muted group-hover/like:text-skin-primary'
-                            }`}
+                    {/* Segment Upvote Button & Likers Count */}
+                    <div className="flex items-center gap-1">
+                      {String(seg.author?._id || seg.author) !== String(currentUserId) && (
+                        <button
+                          onClick={() => handleSegmentLike(seg._id)}
+                          className="group/like transition-all focus:outline-none"
+                          title="Upvote this part"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.75c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 10.203 4.167 9.75 5 9.75h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z" />
-                        </svg>
-                        <span className={`text-xs font-medium transition-colors ${seg.upvotes?.some(id => String(id) === String(currentUserId))
-                          ? 'text-skin-primary font-bold'
-                          : 'text-skin-muted'
-                          }`}>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            fill={seg.upvotes?.some(id => {
+                              const compareId = id._id ? String(id._id) : String(id);
+                              return compareId === String(currentUserId);
+                            }) ? "currentColor" : "none"}
+                            className={`w-4 h-4 transition-all duration-300 ${seg.upvotes?.some(id => {
+                              const compareId = id._id ? String(id._id) : String(id);
+                              return compareId === String(currentUserId);
+                            })
+                              ? 'text-skin-primary scale-110'
+                              : 'text-skin-muted group-hover/like:text-skin-primary'
+                              }`}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                          </svg>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fetchSegmentLikers(seg._id);
+                        }}
+                        className={`flex items-center gap-1 hover:bg-skin-primary/5 px-2 py-0.5 rounded-full transition-colors group/likers ${seg.upvotes?.some(id => String(id) === String(currentUserId)) ? 'text-skin-primary font-bold' : 'text-skin-muted group-hover/likers:text-skin-primary'}`}
+                        title="See who liked this part"
+                      >
+                        <span className="text-xs font-bold">
                           {seg.upvotes?.length || 0}
                         </span>
                       </button>
-                    )}
+                    </div>
                   </div>
 
                   {/* Segment Menu */}
@@ -559,9 +760,23 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
         </div>
       </div>
 
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
-      )}
+      <UserListModal
+        isOpen={showLikersModal}
+        onClose={() => setShowLikersModal(false)}
+        title="Liked By"
+        users={likersList}
+        loading={likersLoading}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.type === 'story' ? "Delete Entire Story?" : "Delete Contribution?"}
+        message={confirmModal.type === 'story' 
+          ? "Are you sure you want to permanently delete this entire story? All parts will be lost." 
+          : "Are you sure you want to delete this contribution?"}
+        onConfirm={confirmModal.type === 'story' ? confirmDeleteStory : confirmDeleteSegment}
+        onCancel={() => setConfirmModal({ isOpen: false, type: null, id: null })}
+      />
     </div>
   );
 };

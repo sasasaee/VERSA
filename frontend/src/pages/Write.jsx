@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotification } from '../context/NotificationContext';
 
 const Write = () => {
   const [title, setTitle] = useState('');
@@ -8,6 +9,7 @@ const Write = () => {
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { showNotification } = useNotification();
   const navigate = useNavigate();
 
   const genres = ['General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller', 'Others'];
@@ -28,13 +30,13 @@ const Write = () => {
     e.preventDefault();
 
     if (getWordCount(content) > 200) {
-      return alert("Story content cannot exceed 200 words.");
+      return showNotification("Story content cannot exceed 200 words.", "error");
     }
 
     try {
       let rawToken = localStorage.getItem('token');
       if (!rawToken) {
-        alert("You must be logged in to post.");
+        showNotification("You must be logged in to post.", "error");
         navigate('/login');
         return;
       }
@@ -60,15 +62,15 @@ const Write = () => {
       });
 
       if (response.ok) {
-        alert("Story Published!");
+        showNotification("Story Published!", "success");
         navigate('/dashboard');
       } else {
         const errorData = await response.json();
-        alert(errorData.msg || "Failed to publish");
+        showNotification(errorData.msg || "Failed to publish", "error");
       }
     } catch (error) {
       console.error(error);
-      alert("Server error. Is the backend running?");
+      showNotification("Server error. Is the backend running?", "error");
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Toast from '../components/Toast';
+import { useNotification } from '../context/NotificationContext';
 import SubmissionModal from '../components/SubmissionModal';
 
 const ContestPage = () => {
@@ -12,7 +12,7 @@ const ContestPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [submissions, setSubmissions] = useState([]);
     const [selectedSubmission, setSelectedSubmission] = useState(null);
-    const [toast, setToast] = useState(null);
+    const { showNotification } = useNotification();
     const [votingInProgress, setVotingInProgress] = useState(null);
     const navigate = useNavigate();
 
@@ -57,7 +57,7 @@ const ContestPage = () => {
 
     const handleSubmit = async () => {
         if (!content.trim()) {
-            setToast({ message: 'Story cannot be empty', type: 'error' });
+            showNotification('Story cannot be empty', 'error');
             return;
         }
 
@@ -81,14 +81,14 @@ const ContestPage = () => {
                     const subsData = await subsRes.json();
                     setSubmissions(subsData);
                 }
-                setToast({ message: 'Story submitted successfully! Good luck!', type: 'success' });
+                showNotification('Story submitted successfully! Good luck!', 'success');
             } else {
                 const data = await res.json();
-                setToast({ message: data.msg || 'Submission failed', type: 'error' });
+                showNotification(data.msg || 'Submission failed', 'error');
             }
         } catch (err) {
             console.error("Submission error:", err);
-            setToast({ message: 'Error submitting story', type: 'error' });
+            showNotification('Error submitting story', 'error');
         } finally {
             setSubmitting(false);
         }
@@ -115,14 +115,14 @@ const ContestPage = () => {
                 setSubmissions(prev => prev.map(sub =>
                     sub._id === submissionId ? { ...sub, votes: data.votes } : sub
                 ));
-                setToast({ message: data.hasVoted ? 'Vote added!' : 'Vote removed!', type: 'success' });
+                showNotification(data.hasVoted ? 'Vote added!' : 'Vote removed!', 'success');
             } else {
                 const data = await res.json();
-                setToast({ message: data.msg || 'Voting failed', type: 'error' });
+                showNotification(data.msg || 'Voting failed', 'error');
             }
         } catch (err) {
             console.error("Voting error:", err);
-            setToast({ message: 'Error processing vote', type: 'error' });
+            showNotification('Error processing vote', 'error');
         } finally {
             setVotingInProgress(null);
         }
@@ -322,33 +322,35 @@ const ContestPage = () => {
                                 <p className="font-serif italic text-skin-text/80 leading-relaxed line-clamp-6">
                                     "{sub.content}"
                                 </p>
-                                <div className="mt-6 flex items-center justify-between">
-                                    <button
-                                        className="text-xs font-black text-skin-secondary uppercase tracking-[0.2em] flex items-center gap-2 hover:gap-3 transition-all"
-                                        onClick={() => setSelectedSubmission(sub)}
-                                    >
-                                        Read Full Story →
-                                    </button>
+                                    <div className="mt-6 flex items-center justify-between">
+                                        <button
+                                            className="text-xs font-black text-skin-secondary uppercase tracking-[0.2em] flex items-center gap-2 hover:gap-3 transition-all"
+                                            onClick={() => setSelectedSubmission(sub)}
+                                        >
+                                            Read Full Story →
+                                        </button>
 
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-1.5 text-skin-muted">
-                                            <span className="text-sm">⭐</span>
-                                            <span className="text-xs font-bold">{sub.votes?.length || 0}</span>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-1.5 text-skin-muted">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" fill={sub.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(userId)) ? "currentColor" : "none"} className={`w-4 h-4 ${sub.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(userId)) ? 'text-skin-primary' : 'text-skin-muted'}`}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                                </svg>
+                                                <span className="text-xs font-bold">{sub.votes?.length || 0}</span>
+                                            </div>
+
+                                            {isVotingPeriod && sub.user?._id !== userId && (
+                                                <button
+                                                    onClick={() => handleVote(sub._id)}
+                                                    disabled={votingInProgress === sub._id}
+                                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sub.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(userId))
+                                                        ? 'bg-skin-primary text-white'
+                                                        : 'border-2 border-skin-primary/20 text-skin-primary hover:bg-skin-primary/5'
+                                                        }`}
+                                                >
+                                                    {votingInProgress === sub._id ? '...' : (sub.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(userId)) ? 'Voted' : 'Vote')}
+                                                </button>
+                                            )}
                                         </div>
-
-                                        {isVotingPeriod && sub.user?._id !== userId && (
-                                            <button
-                                                onClick={() => handleVote(sub._id)}
-                                                disabled={votingInProgress === sub._id}
-                                                className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sub.votes?.includes(userId)
-                                                    ? 'bg-skin-primary text-white'
-                                                    : 'border-2 border-skin-primary/20 text-skin-primary hover:bg-skin-primary/5'
-                                                    }`}
-                                            >
-                                                {votingInProgress === sub._id ? '...' : (sub.votes?.includes(userId) ? 'Voted' : 'Vote')}
-                                            </button>
-                                        )}
-                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -360,14 +362,6 @@ const ContestPage = () => {
                 <SubmissionModal
                     submission={selectedSubmission}
                     onClose={() => setSelectedSubmission(null)}
-                />
-            )}
-
-            {toast && (
-                <Toast
-                    message={toast.message}
-                    type={toast.type}
-                    onClose={() => setToast(null)}
                 />
             )}
         </div>
