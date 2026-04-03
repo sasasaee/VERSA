@@ -17,6 +17,15 @@ export default {
           accent: 'var(--accent)',
           'on-primary': 'var(--text-on-primary)',
           placeholder: 'var(--placeholder)',
+          'search-border': 'var(--search-border)',
+          'card-border': 'var(--card-border)',
+          'navbar-border': 'var(--navbar-profile-border)',
+          'qw-border': 'var(--quickwrite-border)',
+          'qw-select-border': 'var(--quickwrite-select-border)',
+          'dash-date': 'var(--dash-date-text)',
+          'dash-genre': 'var(--dash-genre-text)',
+          'dash-dots': 'var(--dash-dots-text)',
+          'prof-border': 'var(--profile-border)',
         }
       },
       animation: {

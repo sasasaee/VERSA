@@ -6,8 +6,8 @@ mongoose.connect(process.env.MONGO_URI)
     .then(async () => {
         console.log('Connected to MongoDB');
 
-        const deadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Contest ends in 7 days
-        const votingDeadline = new Date(deadline.getTime() + 24 * 60 * 60 * 1000); // Voting ends 24 hours after that
+        const deadline = new Date(Date.now() + 2 * 60 * 1000); // Contest ends in 7 days
+        const votingDeadline = new Date(deadline.getTime() + 2 * 60 * 1000); // Voting ends 24 hours after that
 
         const contest = new Contest({
             title: 'The Whispering Shadows',

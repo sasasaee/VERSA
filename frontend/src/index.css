@@ -16,6 +16,15 @@
   --petal-color-1: #A54F6B;
   --petal-color-2: #d26b8d;
   --placeholder: #666666;
+  --search-border: #DBC8B6; /* Light brown border for light mode */
+  --card-border: #DBC8B6;
+  --navbar-profile-border: rgba(186, 185, 139, 0.1);
+  --quickwrite-border: rgba(132, 89, 43, 0.2);
+  --quickwrite-select-border: rgba(132, 89, 43, 0.3);
+  --dash-date-text: var(--text-muted);
+  --dash-genre-text: var(--text-muted);
+  --dash-dots-text: var(--text-muted);
+  --profile-border: rgba(132, 89, 43, 0.2);
 }
 
 [data-theme='dark'] {
@@ -41,6 +50,15 @@
   --petal-color-1: #CF9D7B;
   --petal-color-2: #724B39;
   --placeholder: #724B39;
+  --search-border: #3E2723; /* Darker brown border instead of white for dark mode */
+  --card-border: transparent; /* Remove white line in dark mode */
+  --navbar-profile-border: #3E2723;
+  --quickwrite-border: #3E2723;
+  --quickwrite-select-border: #3E2723;
+  --dash-date-text: #A6785D;
+  --dash-genre-text: #A6785D;
+  --dash-dots-text: #A6785D;
+  --profile-border: #3E2723;
 }
 
 /* Mapping to Tailwind classes */

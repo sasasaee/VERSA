@@ -13,6 +13,13 @@ const About = () => {
     <div className="min-h-screen bg-skin-base">
       {/* Enhanced Hero with animated background */}
       <div className="relative bg-skin-primary/10 py-24 overflow-hidden">
+        <button
+          onClick={() => navigate(localStorage.getItem('token') ? '/' : '/login')}
+          className="absolute top-10 left-[15%] z-20 text-3xl font-serif font-black text-skin-primary tracking-tighter hover:text-skin-secondary transition-colors"
+        >
+          ← VERSA
+        </button>
+
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-skin-primary/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-skin-secondary/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>

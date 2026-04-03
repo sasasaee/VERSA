@@ -316,7 +316,7 @@ const StoryModal = ({ storyId, onClose, onRankUpgrade }) => {
 
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 z-10 w-8 h-8 bg-black/50 text-white rounded-full hover:bg-red-500 transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/50 text-white rounded-full hover:bg-red-500 transition-colors"
         >
           ✕
         </button>

@@ -163,9 +163,9 @@ const ContestPage = () => {
                 ← VERSA
             </button>
 
-            <div className="bg-skin-card rounded-3xl shadow-2xl overflow-hidden border border-skin-primary/5">
+            <div className="bg-skin-card rounded-3xl shadow-2xl overflow-hidden border border-skin-prof-border">
                 {/* Header Section */}
-                <div className="bg-gradient-to-br from-skin-primary/10 to-skin-secondary/5 p-8 md:p-12 border-b border-skin-primary/10">
+                <div className="bg-gradient-to-br from-skin-primary/10 to-skin-secondary/5 p-8 md:p-12 border-b border-skin-prof-border">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
@@ -188,7 +188,7 @@ const ContestPage = () => {
                             </h1>
                         </div>
 
-                        <div className="bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-white/50 shadow-sm min-w-[200px]">
+                        <div className="bg-skin-card/80 backdrop-blur-sm p-4 rounded-2xl border border-skin-prof-border shadow-sm min-w-[200px]">
                             <div className="text-[10px] font-black text-skin-muted uppercase tracking-[0.2em] mb-1">
                                 {isExpired ? 'Voting Ends' : 'Deadline'}
                             </div>
@@ -217,7 +217,7 @@ const ContestPage = () => {
                                 <span className="text-xl">✅</span> Already Submitted
                             </div>
                             <h3 className="text-lg font-serif font-bold text-skin-primary mb-4">Your Entry:</h3>
-                            <div className="bg-skin-base/50 p-8 rounded-2xl border border-skin-primary/5 font-serif italic text-lg leading-relaxed text-skin-text/80 whitespace-pre-wrap">
+                            <div className="bg-skin-base/50 p-8 rounded-2xl border border-skin-prof-border font-serif italic text-lg leading-relaxed text-skin-text/80 whitespace-pre-wrap">
                                 {submission.content}
                             </div>
                             <div className="mt-8">
@@ -256,7 +256,7 @@ const ContestPage = () => {
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 placeholder="Start writing your story here... (Max 200 words)"
-                                className="w-full min-h-[400px] bg-skin-base/50 p-8 rounded-3xl border-2 border-skin-primary/10 focus:border-skin-secondary outline-none transition-all font-serif text-lg leading-relaxed placeholder:italic"
+                                className="w-full min-h-[400px] bg-skin-base/50 p-8 rounded-3xl border-2 border-skin-prof-border focus:border-skin-secondary outline-none transition-all font-serif text-lg leading-relaxed placeholder:italic"
                                 spellCheck="false"
                             />
 
@@ -293,7 +293,7 @@ const ContestPage = () => {
                 </div>
 
                 {submissions.length === 0 ? (
-                    <div className="text-center py-20 bg-skin-card rounded-3xl border border-dashed border-skin-primary/20">
+                    <div className="text-center py-20 bg-skin-card rounded-3xl border border-dashed border-skin-prof-border">
                         <span className="text-4xl mb-4 block">✍️</span>
                         <h3 className="text-xl font-serif font-bold text-skin-primary">No submissions yet</h3>
                         <p className="text-skin-muted">Be the first to share your story!</p>
@@ -301,7 +301,7 @@ const ContestPage = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {submissions.map((sub) => (
-                            <div key={sub._id} className="bg-skin-card p-8 rounded-3xl border border-skin-primary/5 shadow-xl hover:translate-y-[-4px] transition-all group">
+                            <div key={sub._id} className="bg-skin-card p-8 rounded-3xl border border-skin-prof-border shadow-xl hover:translate-y-[-4px] transition-all group">
                                 <div className="flex items-center gap-4 mb-6">
                                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-skin-secondary/20 shadow-inner">
                                         <img
@@ -344,7 +344,7 @@ const ContestPage = () => {
                                                     disabled={votingInProgress === sub._id}
                                                     className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sub.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(userId))
                                                         ? 'bg-skin-primary text-white'
-                                                        : 'border-2 border-skin-primary/20 text-skin-primary hover:bg-skin-primary/5'
+                                                        : 'border-2 border-skin-prof-border text-skin-primary hover:bg-skin-primary/5'
                                                         }`}
                                                 >
                                                     {votingInProgress === sub._id ? '...' : (sub.votes?.some(v => (v._id ? String(v._id) : String(v)) === String(userId)) ? 'Voted' : 'Vote')}

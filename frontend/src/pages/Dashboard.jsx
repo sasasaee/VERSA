@@ -380,7 +380,7 @@ const Dashboard = () => {
 
                       {/* Genre Badge on Image */}
                       <div className="absolute top-4 right-4">
-                        <span className="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-skin-muted/20">
+                        <span className="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-[#CF9D7B]">
                           {story.genre || 'General'}
                         </span>
                       </div>
@@ -400,7 +400,7 @@ const Dashboard = () => {
                           }
                         }}
                       >
-                        <div className="w-10 h-10 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-primary/10 overflow-hidden group-hover:border-skin-secondary transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-search-border overflow-hidden group-hover:border-skin-secondary transition-colors">
                           {story.author?.profilePicture ? (
                             <img
                               src={story.author.profilePicture}
@@ -417,7 +417,7 @@ const Dashboard = () => {
                             {story.author?.username || "Unknown"}
                           </h4>
 
-                          <span className="text-xs text-skin-muted">
+                          <span className="text-xs text-skin-dash-date">
                             {story.createdAt
                               ? new Date(story.createdAt).toLocaleDateString()
                               : 'Just now'}
@@ -427,7 +427,7 @@ const Dashboard = () => {
 
                       <div className="flex items-center gap-2 menu-container">
                         {!story.headerImage && (
-                          <span className="text-xs font-medium text-skin-muted bg-skin-muted/10 border border-skin-muted/20 px-3 py-1 rounded-full">
+                          <span className="text-xs font-medium text-skin-dash-genre bg-skin-muted/10 border border-[#CF9D7B] px-3 py-1 rounded-full text-center inline-block min-w-[80px]">
                             {story.genre || 'General'}
                           </span>
                         )}
@@ -438,7 +438,7 @@ const Dashboard = () => {
                               e.stopPropagation();
                               setOpenMenuId(openMenuId === story._id ? null : story._id);
                             }}
-                            className="p-1 text-skin-muted hover:text-skin-primary transition-colors focus:outline-none"
+                            className="p-1 text-skin-dash-dots hover:text-skin-primary transition-colors focus:outline-none"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
@@ -446,7 +446,7 @@ const Dashboard = () => {
                           </button>
 
                           {openMenuId === story._id && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-skin-card border border-skin-muted/20 rounded-xl shadow-xl z-[40] py-2 animate-fade-in">
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-skin-card border border-skin-card-border rounded-xl shadow-xl z-[40] py-2 animate-fade-in">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -493,7 +493,7 @@ const Dashboard = () => {
                     </p>
 
                     {/* Action buttons */}
-                    <div className="flex items-center justify-between border-t border-skin-muted/20 pt-4 relative">
+                    <div className="flex items-center justify-between border-t border-skin-card-border pt-4 relative">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           {/* BOOK UPVOTE BUTTON (Icon Only) */}
