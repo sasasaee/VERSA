@@ -29,7 +29,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('feed');
+  const [feedTab, setFeedTab] = useState('global'); // 'global' or 'following'
   const [selectedStoryId, setSelectedStoryId] = useState(null);
   const { showNotification } = useNotification();
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -68,12 +68,16 @@ const Dashboard = () => {
     }
 
     const fetchStories = async () => {
+      setLoading(true);
       try {
-        const res = await fetch('http://localhost:5000/api/stories', {
+        const url = feedTab === 'following' 
+          ? 'http://localhost:5000/api/stories/following' 
+          : 'http://localhost:5000/api/stories';
+          
+        const res = await fetch(url, {
           headers: { 'x-auth-token': token }
         });
 
-        //Token invalid/expired?
         if (res.status === 401) {
           localStorage.removeItem('token');
           navigate('/login');
@@ -83,8 +87,6 @@ const Dashboard = () => {
         if (res.ok) {
           const data = await res.json();
           setStories(data);
-        } else {
-          console.error("Failed to fetch");
         }
       } catch (err) {
         console.error("Error fetching stories:", err);
@@ -109,7 +111,7 @@ const Dashboard = () => {
 
     fetchStories();
     fetchUserProfile();
-  }, [navigate, token]);
+  }, [navigate, token, feedTab]);
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
@@ -321,8 +323,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen pt-10 px-4 max-w-7xl mx-auto">
       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        activeTab={feedTab}
+        setActiveTab={setFeedTab}
         onSearch={handleSearch}
         sortBy={sortBy}
         setSortBy={setSortBy}
@@ -337,6 +339,24 @@ const Dashboard = () => {
             onStoryPosted={handleNewStory}
             onRankUpgrade={() => setShowRankUpgrade(true)}
           />
+
+          {/* Feed Tabs Toggle - Now below QuickWrite */}
+          <div className="flex items-center gap-8 mb-10 mt-12 border-b border-skin-card-border pb-4">
+            <button
+              onClick={() => setFeedTab('global')}
+              className={`text-xl font-serif font-bold transition-all relative ${feedTab === 'global' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+            >
+              Global Feed
+              {feedTab === 'global' && <div className="absolute -bottom-4 left-0 right-0 h-1 bg-skin-primary rounded-full animate-fade-in" />}
+            </button>
+            <button
+              onClick={() => setFeedTab('following')}
+              className={`text-xl font-serif font-bold transition-all relative ${feedTab === 'following' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+            >
+              Following
+              {feedTab === 'following' && <div className="absolute -bottom-4 left-0 right-0 h-1 bg-skin-primary rounded-full animate-fade-in" />}
+            </button>
+          </div>
 
           <div className="space-y-8">
             {isSearching && (
@@ -360,9 +380,21 @@ const Dashboard = () => {
               </div>
             ) : storiesToDisplay.length === 0 ? (
               <div className="text-center py-20 bg-skin-muted/5 rounded-3xl border border-dashed border-skin-muted/30">
-                <p className="text-skin-muted font-serif italic text-lg">
-                  {isSearching ? "No stories found matching your search." : "No stories yet. Be the first!"}
+                <p className="text-skin-muted font-serif italic text-lg px-6">
+                  {isSearching 
+                    ? "No stories found matching your search." 
+                    : feedTab === 'following' 
+                      ? "You aren't following anyone yet, or your connections haven't shared any stories." 
+                      : "No stories yet. Be the first to share a masterpiece!"}
                 </p>
+                {feedTab === 'following' && !isSearching && (
+                  <button 
+                    onClick={() => setFeedTab('global')}
+                    className="mt-4 text-skin-primary hover:underline font-bold"
+                  >
+                    Explore the Global Feed →
+                  </button>
+                )}
               </div>
             ) : (
               storiesToDisplay.map((story) => (
@@ -380,7 +412,7 @@ const Dashboard = () => {
 
                       {/* Genre Badge on Image */}
                       <div className="absolute top-4 right-4">
-                        <span className="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-skin-muted/20">
+                        <span className="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-[#CF9D7B]">
                           {story.genre || 'General'}
                         </span>
                       </div>
@@ -400,7 +432,7 @@ const Dashboard = () => {
                           }
                         }}
                       >
-                        <div className="w-10 h-10 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-primary/10 overflow-hidden group-hover:border-skin-secondary transition-colors">
+                        <div className="w-10 h-10 rounded-full bg-skin-primary/20 flex items-center justify-center font-bold text-skin-primary border-2 border-skin-search-border overflow-hidden group-hover:border-skin-secondary transition-colors">
                           {story.author?.profilePicture ? (
                             <img
                               src={story.author.profilePicture}
@@ -417,7 +449,7 @@ const Dashboard = () => {
                             {story.author?.username || "Unknown"}
                           </h4>
 
-                          <span className="text-xs text-skin-muted">
+                          <span className="text-xs text-skin-dash-date">
                             {story.createdAt
                               ? new Date(story.createdAt).toLocaleDateString()
                               : 'Just now'}
@@ -427,7 +459,7 @@ const Dashboard = () => {
 
                       <div className="flex items-center gap-2 menu-container">
                         {!story.headerImage && (
-                          <span className="text-xs font-medium text-skin-muted bg-skin-muted/10 border border-skin-muted/20 px-3 py-1 rounded-full">
+                          <span className="text-xs font-medium text-skin-dash-genre bg-skin-muted/10 border border-[#CF9D7B] px-3 py-1 rounded-full text-center inline-block min-w-[80px]">
                             {story.genre || 'General'}
                           </span>
                         )}
@@ -438,7 +470,7 @@ const Dashboard = () => {
                               e.stopPropagation();
                               setOpenMenuId(openMenuId === story._id ? null : story._id);
                             }}
-                            className="p-1 text-skin-muted hover:text-skin-primary transition-colors focus:outline-none"
+                            className="p-1 text-skin-dash-dots hover:text-skin-primary transition-colors focus:outline-none"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
@@ -446,7 +478,7 @@ const Dashboard = () => {
                           </button>
 
                           {openMenuId === story._id && (
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-skin-card border border-skin-muted/20 rounded-xl shadow-xl z-[40] py-2 animate-fade-in">
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-skin-card border border-skin-card-border rounded-xl shadow-xl z-[40] py-2 animate-fade-in">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -493,7 +525,7 @@ const Dashboard = () => {
                     </p>
 
                     {/* Action buttons */}
-                    <div className="flex items-center justify-between border-t border-skin-muted/20 pt-4 relative">
+                    <div className="flex items-center justify-between border-t border-skin-card-border pt-4 relative">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           {/* BOOK UPVOTE BUTTON (Icon Only) */}

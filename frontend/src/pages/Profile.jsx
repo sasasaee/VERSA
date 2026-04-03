@@ -445,12 +445,12 @@ const Profile = () => {
 
                 <div className="space-y-8 mt-4">
                     {/*Profile Header Card */}
-                    <div className="bg-skin-card rounded-2xl p-8 shadow-lg border border-skin-muted/10 relative overflow-hidden">
+                    <div className="bg-skin-card rounded-2xl p-8 shadow-lg border border-skin-prof-border relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-skin-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
 
                         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start relative z-10">
                             <div className="flex flex-col items-center gap-4">
-                                <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-skin-primary/20 shadow-inner relative bg-skin-muted/10 group">
+                                <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-skin-prof-border shadow-inner relative bg-skin-muted/10 group">
                                     {user.profilePicture ? (
                                         <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                     ) : (
@@ -462,7 +462,7 @@ const Profile = () => {
                                 </div>
 
                                 {!id && (
-                                    <label className="cursor-pointer bg-skin-base border border-skin-muted/30 text-skin-text py-1.5 px-4 rounded-full text-xs font-bold hover:border-skin-primary transition-all shadow-sm">
+                                    <label className="cursor-pointer bg-skin-base border border-skin-prof-border text-skin-text py-1.5 px-4 rounded-full text-xs font-bold hover:border-skin-primary transition-all shadow-sm">
                                         Change Picture
                                         <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
                                     </label>
@@ -484,21 +484,21 @@ const Profile = () => {
                                         </p>
 
                                         <div className="flex flex-wrap justify-center md:justify-start gap-6 pt-2">
-                                            <div className="text-center border-r border-skin-muted/20 pr-6">
+                                            <div className="text-center border-r border-skin-prof-border pr-6">
                                                 <p className="text-2xl font-bold text-skin-primary">
                                                     {stories.filter(s => String(s.author?._id || s.author) === String(id || currentUserId)).length}
                                                 </p>
                                                 <p className="text-xs text-skin-muted uppercase tracking-tighter">Stories</p>
                                             </div>
                                             <div
-                                                className="text-center border-r border-skin-muted/20 pr-6 cursor-pointer hover:opacity-70 transition-opacity"
+                                                className="text-center border-r border-skin-prof-border pr-6 cursor-pointer hover:opacity-70 transition-opacity"
                                                 onClick={() => setShowFollowersModal(true)}
                                             >
                                                 <p className="text-2xl font-bold text-skin-primary">{followersCount}</p>
                                                 <p className="text-xs text-skin-muted uppercase tracking-tighter">Followers</p>
                                             </div>
                                             <div
-                                                className="text-center border-r border-skin-muted/20 pr-6 cursor-pointer hover:opacity-70 transition-opacity"
+                                                className="text-center border-r border-skin-prof-border pr-6 cursor-pointer hover:opacity-70 transition-opacity"
                                                 onClick={() => setShowFollowingModal(true)}
                                             >
                                                 <p className="text-2xl font-bold text-skin-primary">{followingCount}</p>
@@ -555,7 +555,7 @@ const Profile = () => {
                                             name="username"
                                             value={formData.username}
                                             onChange={handleInputChange}
-                                            className="w-full bg-skin-base border border-skin-muted/20 rounded-xl p-3 focus:outline-none focus:border-skin-primary text-xl font-bold font-serif shadow-sm"
+                                            className="w-full bg-skin-base border border-skin-prof-border rounded-xl p-3 focus:outline-none focus:border-skin-primary text-xl font-bold font-serif shadow-sm"
                                             placeholder="Username"
                                         />
                                         <textarea
@@ -563,7 +563,7 @@ const Profile = () => {
                                             value={formData.bio}
                                             onChange={handleInputChange}
                                             rows="3"
-                                            className="w-full bg-skin-base border border-skin-muted/20 rounded-xl p-3 focus:outline-none focus:border-skin-primary text-skin-text leading-relaxed shadow-sm resize-none"
+                                            className="w-full bg-skin-base border border-skin-prof-border rounded-xl p-3 focus:outline-none focus:border-skin-primary text-skin-text leading-relaxed shadow-sm resize-none"
                                             placeholder="Tell your story..."
                                         />
                                         <div className="flex gap-3">
@@ -578,7 +578,7 @@ const Profile = () => {
 
                     {/* Stories Dashboard */}
                     <div className="space-y-6">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-skin-muted/20 pb-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-skin-prof-border pb-4">
                             <div className="flex gap-8">
                                 <button
                                     onClick={() => setActiveStoryTab('my-stories')}
@@ -663,7 +663,7 @@ const Profile = () => {
                                                 }
 
                                                 return (
-                                                    <div key={submission._id} className="bg-skin-card p-6 rounded-2xl border border-skin-muted/10 hover:border-skin-primary/30 transition-all">
+                                                    <div key={submission._id} className="bg-skin-card p-6 rounded-2xl border border-skin-prof-border hover:border-skin-primary/30 transition-all">
                                                         <div className="flex justify-between items-start mb-4">
                                                             <div>
                                                                 <h4 className="text-lg font-bold text-skin-primary">{submission.contest.title}</h4>
@@ -673,7 +673,7 @@ const Profile = () => {
                                                                 {status}
                                                             </span>
                                                         </div>
-                                                        <div className="bg-skin-base/50 p-4 rounded-xl border border-skin-muted/5 mb-4">
+                                                        <div className="bg-skin-base/50 p-4 rounded-xl border border-skin-prof-border mb-4">
                                                             <p className="text-skin-text/80 italic font-serif leading-relaxed line-clamp-3">
                                                                 "{submission.content}"
                                                             </p>
@@ -704,7 +704,7 @@ const Profile = () => {
                                     {itemsToDisplay.map(story => (
                                         <div
                                             key={story._id}
-                                            className="group bg-skin-card rounded-2xl overflow-hidden border border-skin-muted/20 hover:border-skin-primary/30 hover:shadow-xl transition-all duration-300 relative"
+                                            className="group bg-skin-card rounded-2xl overflow-hidden border border-skin-prof-border hover:border-skin-primary/30 hover:shadow-xl transition-all duration-300 relative"
                                         >
                                             {story.headerImage && (
                                                 <div className="h-32 w-full overflow-hidden cursor-pointer" onClick={() => setSelectedStoryId(story._id)}>
@@ -713,7 +713,7 @@ const Profile = () => {
                                             )}
                                             <div className="p-5 space-y-3">
                                                 <div className="flex justify-between items-start">
-                                                    <span className="px-2 py-0.5 bg-skin-primary/10 text-skin-primary text-[10px] font-bold uppercase rounded-md border border-skin-muted/10">
+                                                    <span className="px-2 py-0.5 bg-skin-primary/10 text-skin-primary text-[10px] font-bold uppercase rounded-md border border-skin-prof-border">
                                                         {story.genre || 'General'}
                                                     </span>
 
@@ -736,7 +736,7 @@ const Profile = () => {
                                                             </button>
 
                                                             {openMenuId === story._id && (
-                                                                <div className="absolute right-0 top-full mt-1 w-48 bg-skin-card border border-skin-muted/20 rounded-xl shadow-xl z-[40] py-2 animate-fade-in text-left">
+                                                                <div className="absolute right-0 top-full mt-1 w-48 bg-skin-card border border-skin-prof-border rounded-xl shadow-xl z-[40] py-2 animate-fade-in text-left">
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
@@ -775,7 +775,7 @@ const Profile = () => {
                                                 <p className="text-sm text-skin-text/60 line-clamp-2 leading-relaxed cursor-pointer" onClick={() => setSelectedStoryId(story._id)}>
                                                     {story.segments?.[0]?.content || "No content yet."}
                                                 </p>
-                                                <div className="flex items-center justify-between pt-2 border-t border-skin-muted/10">
+                                                <div className="flex items-center justify-between pt-2 border-t border-skin-prof-border">
                                                     <div className="flex items-center gap-4">
                                                         <div className="flex items-center gap-1.5">
                                                             <div className="w-6 h-6 rounded-full bg-skin-primary/10 flex items-center justify-center text-[10px] text-skin-primary font-bold">

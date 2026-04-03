@@ -40,7 +40,7 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
     const data = new FormData();
     data.append('title', formData.title);
     data.append('content', formData.content);
-    data.append('genre', formData.genre);
+    data.append('genre', formData.genre.trim() || 'General');
     if (imageFile) {
       data.append('headerImage', imageFile);
     }
@@ -86,13 +86,13 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
       {!expanded ? (
         <div
           onClick={() => setExpanded(true)}
-          className="flex items-center gap-4 cursor-pointer"
+          className="flex items-center gap-4 cursor-pointer group"
         >
-          <div className="w-10 h-10 rounded-full bg-skin-muted/20 flex items-center justify-center text-2xl text-skin-muted font-light">+</div>
+          <div className="w-10 h-10 rounded-full bg-skin-muted/20 flex items-center justify-center text-2xl text-skin-primary font-light [text-shadow:0_0_8px_var(--primary)] transition-all">+</div>
           <input
             type="text"
             placeholder="Start a new story..."
-            className="bg-transparent text-xl font-serif text-skin-text w-full outline-none pointer-events-none placeholder-skin-placeholder"
+            className="bg-transparent text-xl font-serif text-skin-primary w-full outline-none pointer-events-none placeholder-skin-primary transition-all shadow-skin-primary [text-shadow:0_0_8px_var(--primary)]"
             readOnly
           />
         </div>
@@ -134,7 +134,7 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
 
             <div className="flex items-center gap-4">
               <label className="flex-1 cursor-pointer">
-                <div className="flex items-center justify-center gap-2 bg-skin-base p-2 rounded-lg text-sm text-skin-text border border-dashed border-skin-muted/20 hover:border-skin-primary transition-colors">
+                <div className="flex items-center justify-center gap-2 bg-skin-base p-2 rounded-lg text-sm text-skin-text border border-dashed border-skin-qw-border hover:border-skin-primary transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 opacity-60">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
@@ -148,20 +148,39 @@ const QuickWrite = ({ onStoryPosted, onRankUpgrade }) => {
                 />
               </label>
 
-              <select
-                value={formData.genre}
-                onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                className="bg-skin-card p-2 rounded-lg text-sm text-skin-text border border-skin-muted/30 hover:border-skin-primary focus:border-skin-primary outline-none transition-all cursor-pointer shadow-sm flex-1 min-w-[120px]"
-              >
-                <option>General</option>
-                <option>Fantasy</option>
-                <option>Sci-Fi</option>
-                <option>Mystery</option>
-                <option>Romance</option>
-                <option>Horror</option>
-                <option>Thriller</option>
-                <option>Others</option>
-              </select>
+              <div className="flex flex-1 gap-2">
+                <select
+                  value={!['General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller'].includes(formData.genre) ? 'Others' : formData.genre}
+                  onChange={(e) => {
+                    if (e.target.value === 'Others') {
+                      setFormData({ ...formData, genre: '' });
+                    } else {
+                      setFormData({ ...formData, genre: e.target.value });
+                    }
+                  }}
+                  className="bg-skin-card p-2 rounded-lg text-sm text-skin-text border border-skin-qw-select-border hover:border-skin-primary focus:border-skin-primary outline-none transition-all cursor-pointer shadow-sm text-center flex-1"
+                >
+                  <option>General</option>
+                  <option>Fantasy</option>
+                  <option>Sci-Fi</option>
+                  <option>Mystery</option>
+                  <option>Romance</option>
+                  <option>Horror</option>
+                  <option>Thriller</option>
+                  <option>Others</option>
+                </select>
+
+                {!['General', 'Fantasy', 'Sci-Fi', 'Mystery', 'Romance', 'Horror', 'Thriller'].includes(formData.genre) && (
+                  <input
+                    type="text"
+                    placeholder="Custom genre..."
+                    value={formData.genre}
+                    onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                    className="bg-skin-card p-2 rounded-lg text-sm text-skin-text border border-skin-qw-select-border hover:border-skin-primary focus:border-skin-primary outline-none transition-all shadow-sm flex-1 w-[120px]"
+                    maxLength={20}
+                  />
+                )}
+              </div>
             </div>
           </div>
 

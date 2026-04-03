@@ -47,7 +47,7 @@ const SortDropdown = ({ sortBy, setSortBy, filterGenre, setFilterGenre }) => {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 bg-skin-card border border-skin-muted/20 rounded-full py-2 px-5 text-sm font-bold text-skin-text hover:bg-skin-muted/5 transition-all shadow-sm"
+                className="flex items-center gap-2 bg-skin-card border border-skin-search-border rounded-full py-2 px-5 text-sm font-bold text-skin-text hover:bg-skin-muted/5 transition-all shadow-sm"
             >
                 <span>{getSortLabel()}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
@@ -56,10 +56,9 @@ const SortDropdown = ({ sortBy, setSortBy, filterGenre, setFilterGenre }) => {
             </button>
 
             {isOpen && (
-                <div className="absolute left-0 mt-2 w-56 bg-skin-card border border-skin-muted/20 rounded-2xl shadow-2xl z-[50] overflow-hidden animate-fade-in">
-                    <div className={`transition-transform duration-300 flex w-[200%] ${view === 'genres' ? '-translate-x-1/2' : 'translate-x-0'}`}>
-                        {/* Main Menu */}
-                        <div className="w-1/2 p-2 space-y-1">
+                <div className="absolute left-0 mt-2 w-56 bg-skin-card border border-skin-search-border rounded-2xl shadow-2xl z-[50] overflow-hidden animate-fade-in">
+                    {view === 'main' ? (
+                        <div className="p-2 space-y-1">
                             <button
                                 onClick={() => handleSortChange('newest')}
                                 className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold transition-colors ${sortBy === 'newest' ? 'bg-skin-primary text-white' : 'text-skin-text hover:bg-skin-primary/10'}`}
@@ -82,9 +81,8 @@ const SortDropdown = ({ sortBy, setSortBy, filterGenre, setFilterGenre }) => {
                                 </svg>
                             </button>
                         </div>
-
-                        {/* Genre Sub-menu */}
-                        <div className="w-1/2 p-2 space-y-1">
+                    ) : (
+                        <div className="p-2 space-y-1">
                             <button
                                 onClick={() => setView('main')}
                                 className="w-full text-left px-4 py-2 mb-1 text-xs font-black uppercase tracking-widest text-skin-muted hover:text-skin-primary flex items-center gap-2 transition-colors"
@@ -106,7 +104,7 @@ const SortDropdown = ({ sortBy, setSortBy, filterGenre, setFilterGenre }) => {
                                 ))}
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
         </div>

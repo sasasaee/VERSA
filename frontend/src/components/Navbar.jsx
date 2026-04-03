@@ -103,7 +103,7 @@ const Navbar = ({ activeTab, setActiveTab, onSearch, sortBy, setSortBy, filterGe
           {!isProfile && (
             <button
               onClick={() => navigate('/profile')}
-              className="w-8 h-8 rounded-full bg-skin-base border-2 border-skin-primary/10 hover:border-skin-primary/40 flex items-center justify-center text-skin-text overflow-hidden transition-all"
+              className="w-8 h-8 rounded-full bg-skin-base border-2 border-skin-navbar-border hover:border-skin-primary/40 flex items-center justify-center text-skin-text overflow-hidden transition-all"
               title="Profile"
             >
               {user?.profilePicture ? (

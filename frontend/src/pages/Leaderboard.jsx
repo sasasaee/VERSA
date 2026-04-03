@@ -122,7 +122,7 @@ const Leaderboard = () => {
                         <div className="animate-spin w-12 h-12 border-4 border-skin-primary border-t-transparent rounded-full"></div>
                     </div>
                 ) : (
-                    <div className="bg-skin-card rounded-[2.5rem] border border-skin-primary/10 shadow-2xl overflow-hidden animate-fade-in relative">
+                    <div className="bg-skin-card rounded-[2.5rem] border border-skin-search-border shadow-2xl overflow-hidden animate-fade-in relative">
                         {/* Decorative glow */}
                         <div className="absolute top-0 left-1/4 w-1/2 h-1 bg-gradient-to-r from-transparent via-skin-primary/40 to-transparent"></div>
 
@@ -137,7 +137,7 @@ const Leaderboard = () => {
                                         <th className="px-10 py-6 text-sm font-black uppercase tracking-widest text-skin-muted text-right">Global Influence</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-skin-primary/5">
+                                <tbody className="divide-y divide-skin-search-border">
                                     {leaderboard.length === 0 ? (
                                         <tr>
                                             <td colSpan="5" className="px-10 py-32 text-center text-skin-muted italic font-serif text-xl opacity-60">
@@ -168,8 +168,8 @@ const Leaderboard = () => {
                                                         <div className={`w-12 h-12 rounded-full p-0.5 overflow-hidden ring-2 transition-all duration-300 ${entry.rank === 1 ? 'ring-[#FFD700]' :
                                                             entry.rank === 2 ? 'ring-[#C0C0C0]' :
                                                                 entry.rank === 3 ? 'ring-[#CD7F32]' :
-                                                                    'ring-transparent group-hover:ring-skin-primary/30'
-                                                            }`}>
+                                                                    'ring-skin-search-border group-hover:ring-skin-secondary'
+                                                                }`}>
                                                             {entry.user.profilePicture ? (
                                                                 <img src={entry.user.profilePicture} className="w-full h-full object-cover rounded-full" />
                                                             ) : (
