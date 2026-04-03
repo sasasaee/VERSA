@@ -29,7 +29,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('feed');
+  const [feedTab, setFeedTab] = useState('global'); // 'global' or 'following'
   const [selectedStoryId, setSelectedStoryId] = useState(null);
   const { showNotification } = useNotification();
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -68,12 +68,16 @@ const Dashboard = () => {
     }
 
     const fetchStories = async () => {
+      setLoading(true);
       try {
-        const res = await fetch('http://localhost:5000/api/stories', {
+        const url = feedTab === 'following' 
+          ? 'http://localhost:5000/api/stories/following' 
+          : 'http://localhost:5000/api/stories';
+          
+        const res = await fetch(url, {
           headers: { 'x-auth-token': token }
         });
 
-        //Token invalid/expired?
         if (res.status === 401) {
           localStorage.removeItem('token');
           navigate('/login');
@@ -83,8 +87,6 @@ const Dashboard = () => {
         if (res.ok) {
           const data = await res.json();
           setStories(data);
-        } else {
-          console.error("Failed to fetch");
         }
       } catch (err) {
         console.error("Error fetching stories:", err);
@@ -109,7 +111,7 @@ const Dashboard = () => {
 
     fetchStories();
     fetchUserProfile();
-  }, [navigate, token]);
+  }, [navigate, token, feedTab]);
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
@@ -321,8 +323,8 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen pt-10 px-4 max-w-7xl mx-auto">
       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        activeTab={feedTab}
+        setActiveTab={setFeedTab}
         onSearch={handleSearch}
         sortBy={sortBy}
         setSortBy={setSortBy}
@@ -337,6 +339,24 @@ const Dashboard = () => {
             onStoryPosted={handleNewStory}
             onRankUpgrade={() => setShowRankUpgrade(true)}
           />
+
+          {/* Feed Tabs Toggle - Now below QuickWrite */}
+          <div className="flex items-center gap-8 mb-10 mt-12 border-b border-skin-card-border pb-4">
+            <button
+              onClick={() => setFeedTab('global')}
+              className={`text-xl font-serif font-bold transition-all relative ${feedTab === 'global' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+            >
+              Global Feed
+              {feedTab === 'global' && <div className="absolute -bottom-4 left-0 right-0 h-1 bg-skin-primary rounded-full animate-fade-in" />}
+            </button>
+            <button
+              onClick={() => setFeedTab('following')}
+              className={`text-xl font-serif font-bold transition-all relative ${feedTab === 'following' ? 'text-skin-primary' : 'text-skin-muted hover:text-skin-text'}`}
+            >
+              Following
+              {feedTab === 'following' && <div className="absolute -bottom-4 left-0 right-0 h-1 bg-skin-primary rounded-full animate-fade-in" />}
+            </button>
+          </div>
 
           <div className="space-y-8">
             {isSearching && (
@@ -360,9 +380,21 @@ const Dashboard = () => {
               </div>
             ) : storiesToDisplay.length === 0 ? (
               <div className="text-center py-20 bg-skin-muted/5 rounded-3xl border border-dashed border-skin-muted/30">
-                <p className="text-skin-muted font-serif italic text-lg">
-                  {isSearching ? "No stories found matching your search." : "No stories yet. Be the first!"}
+                <p className="text-skin-muted font-serif italic text-lg px-6">
+                  {isSearching 
+                    ? "No stories found matching your search." 
+                    : feedTab === 'following' 
+                      ? "You aren't following anyone yet, or your connections haven't shared any stories." 
+                      : "No stories yet. Be the first to share a masterpiece!"}
                 </p>
+                {feedTab === 'following' && !isSearching && (
+                  <button 
+                    onClick={() => setFeedTab('global')}
+                    className="mt-4 text-skin-primary hover:underline font-bold"
+                  >
+                    Explore the Global Feed →
+                  </button>
+                )}
               </div>
             ) : (
               storiesToDisplay.map((story) => (

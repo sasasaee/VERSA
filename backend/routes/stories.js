@@ -108,6 +108,37 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET: Fetch stories from people the current user follows
+router.get('/following', auth, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+
+    const followingIds = user.following || [];
+    
+    const stories = await Story.find({
+      $and: [
+        { 
+          $or: [
+            { author: { $in: followingIds } },
+            { 'segments.author': { $in: followingIds } }
+          ]
+        },
+        { author: { $ne: req.user.id } } // Explicitly exclude current user's own started stories
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .populate('author', 'username rank profilePicture')
+      .populate('segments.author', 'username rank profilePicture');
+
+    res.json(stories);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 // GET: Fetch all stories related to a specific user
 router.get('/user/:id', async (req, res) => {
   try {
