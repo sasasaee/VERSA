@@ -258,8 +258,8 @@ router.get('/check-streak', auth, async (req, res) => {
 
         if (!currentUser) return res.status(404).json({ msg: 'User not found' });
 
-        // If user is already author or master, no need to upgrade
-        if (currentUser.rank === 'author' || currentUser.rank === 'master') {
+        // If user is already author, no need to upgrade
+        if (currentUser.rank === 'author') {
             return res.json({ upgraded: false });
         }
 

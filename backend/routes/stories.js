@@ -176,8 +176,8 @@ router.post('/segment/:id', auth, async (req, res) => {
     const User = require('../models/User');
     const currentUser = await User.findById(req.user.id);
 
-    if (story.authorRank === 'master' && currentUser.rank !== 'master') {
-      return res.status(403).json({ msg: 'Only Masters can continue this story.' });
+    if (story.authorRank === 'author' && currentUser.rank !== 'author') {
+      return res.status(403).json({ msg: 'Only Authors can continue this story.' });
     }
 
     // Update user rank from 'reader' to 'beginner' if needed

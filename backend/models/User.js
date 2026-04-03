@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema({
   },
   rank: {
     type: String,
-    enum: ['reader', 'beginner', 'author', 'master'],
+    enum: ['reader', 'beginner', 'author'],
     default: 'reader'
   },
   bio: {
