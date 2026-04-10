@@ -15,7 +15,18 @@ const UserSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: function() {
+      return !this.isGoogleAccount;
+    }
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  isGoogleAccount: {
+    type: Boolean,
+    default: false
   },
   rank: {
     type: String,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useNotification } from '../context/NotificationContext';
+import { GoogleLogin } from '@react-oauth/google';
 import FlowingPetals from '../components/FlowingPetals';
 
 const Register = () => {
@@ -46,6 +47,31 @@ const Register = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        showNotification('Google Registration Successful!', 'success');
+        setTimeout(() => navigate('/'), 1500);
+      } else {
+        showNotification(data.message || 'Google Registration Failed', 'error');
+      }
+    } catch (error) {
+      console.error('Google Auth Error:', error);
+      showNotification('Server Error during Google Auth', 'error');
+    }
+  };
+
   return (
     <div className="flex items-center justify-center h-screen px-4 relative">
       <FlowingPetals />
@@ -83,6 +109,23 @@ const Register = () => {
           >
             Register
           </button>
+
+          <div className="flex items-center my-4 overflow-hidden">
+            <div className="flex-grow h-px bg-skin-muted/30"></div>
+            <span className="flex-shrink mx-4 text-skin-muted text-sm">Or continue with</span>
+            <div className="flex-grow h-px bg-skin-muted/30"></div>
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => showNotification('Google Registration Failed', 'error')}
+              useOneTap
+              theme="outline"
+              size="large"
+              width="100%"
+            />
+          </div>
 
           <div className="mt-6 text-center text-skin-muted">
             <p>
